@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
+import 'package:food_donation_app/services/donation_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,13 +22,35 @@ class NgoHomeScreen extends StatefulWidget {
 }
 
 class _NgoHomeScreenState extends State<NgoHomeScreen> {
+  List<DonationModel> _myClaims = [];
+  StreamSubscription<List<DonationModel>>? _claimsSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Load all pending (available) donations for the quick stats
+      // Load all pending donations for the statistics cards
       context.read<DonationProvider>().loadAvailableDonations();
+      // Separately stream this NGO's active claims
+      final uid = context.read<AuthProvider>().currentUser?.uid;
+      if (uid != null) {
+        _claimsSub = DonationService().getNgoDonations(uid).listen((list) {
+          if (mounted) {
+            setState(() {
+              _myClaims = list
+                  .where((d) => d.status == DonationStatus.claimed)
+                  .toList();
+            });
+          }
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _claimsSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -37,12 +61,13 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     final available = donationProv.donations;
-    final expiringSoon =
-        available.where((d) => d.isExpiringSoon).length;
-    final halalCount =
-        available.where((d) => d.foodType == FoodType.halal).length;
-    final vegCount =
-        available.where((d) => d.foodType == FoodType.vegetarian).length;
+    final expiringSoon = available.where((d) => d.isExpiringSoon).length;
+    final halalCount = available
+        .where((d) => d.foodType == FoodType.halal)
+        .length;
+    final vegCount = available
+        .where((d) => d.foodType == FoodType.vegetarian)
+        .length;
 
     return Scaffold(
       appBar: AppBar(
@@ -73,8 +98,9 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
               // ── Greeting ─────────────────────────────────────────────────
               Text(
                 'Hello, ${auth.currentUser?.displayName.split(' ').first ?? 'there'} 👋',
-                style: textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const Gap(4),
               Text(
@@ -95,8 +121,9 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
               // ── Quick stats ───────────────────────────────────────────────
               Text(
                 'Available Right Now',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Gap(12),
               Row(
@@ -157,8 +184,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded,
-                          color: AppTheme.statusExpiringSoon),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppTheme.statusExpiringSoon,
+                      ),
                       const Gap(12),
                       Expanded(
                         child: Text(
@@ -171,6 +200,75 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ],
+              // ── Active claims section ──────────────────────────────────────
+              if (_myClaims.isNotEmpty) ...[
+                const Gap(24),
+                Row(
+                  children: [
+                    Text(
+                      'My Active Claims',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Gap(8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.statusClaimed.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${_myClaims.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.statusClaimed,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Gap(8),
+                ..._myClaims.map(
+                  (d) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppTheme.statusClaimed.withValues(
+                          alpha: 0.15,
+                        ),
+                        child: const Icon(
+                          Icons.local_shipping_outlined,
+                          color: AppTheme.statusClaimed,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        d.foodName,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        d.address ?? '${d.quantity} · ${d.donorName}',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.ngoResult, arguments: d),
+                    ),
                   ),
                 ),
               ],
@@ -229,8 +327,9 @@ class _DiscoveryCTACard extends StatelessWidget {
                     Text(
                       'Browse available listings on the map or list view and claim today.',
                       style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onPrimaryContainer
-                            .withValues(alpha: 0.8),
+                        color: colorScheme.onPrimaryContainer.withValues(
+                          alpha: 0.8,
+                        ),
                       ),
                     ),
                     const Gap(14),
@@ -287,16 +386,15 @@ class _StatCard extends StatelessWidget {
                 Text(
                   '$count',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
                 Text(
                   label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(color: color),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: color),
                 ),
               ],
             ),

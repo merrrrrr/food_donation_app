@@ -82,8 +82,7 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
             ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'statusUploadFAB',
-        onPressed: () =>
-            Navigator.of(context).pushNamed(AppRouter.donorUpload),
+        onPressed: () => Navigator.of(context).pushNamed(AppRouter.donorUpload),
         tooltip: 'Upload Food',
         child: const Icon(Icons.add),
       ),
@@ -114,7 +113,10 @@ class _DonationList extends StatelessWidget {
           children: [
             Icon(Icons.inbox_rounded, size: 56, color: Colors.black26),
             Gap(12),
-            Text('No donations here yet.', style: TextStyle(color: Colors.black45)),
+            Text(
+              'No donations here yet.',
+              style: TextStyle(color: Colors.black45),
+            ),
           ],
         ),
       );
@@ -173,13 +175,17 @@ class _DonationCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     donation.foodName,
-                    style: textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                _StatusChip(label: donation.status.displayLabel, color: statusColor),
+                _StatusChip(
+                  label: donation.status.displayLabel,
+                  color: statusColor,
+                ),
               ],
             ),
             const Gap(8),
@@ -204,6 +210,11 @@ class _DonationCard extends StatelessWidget {
                 icon: Icons.handshake_rounded,
                 label: 'Claimed by: ${donation.ngoName}',
               ),
+            if (donation.address != null)
+              _InfoRow(
+                icon: Icons.location_on_outlined,
+                label: donation.address!,
+              ),
 
             // ── Actions ────────────────────────────────────────────────────
             if (showCancelButton) ...[
@@ -223,10 +234,9 @@ class _DonationCard extends StatelessWidget {
               OutlinedButton.icon(
                 icon: const Icon(Icons.receipt_long_outlined, size: 18),
                 label: const Text('View Result'),
-                onPressed: () => Navigator.of(context).pushNamed(
-                  AppRouter.donorResult,
-                  arguments: donation,
-                ),
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed(AppRouter.donorResult, arguments: donation),
               ),
             ],
           ],
@@ -280,10 +290,10 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: color, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -314,10 +324,9 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: color),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: color),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),

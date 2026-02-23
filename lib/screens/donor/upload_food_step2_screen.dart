@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +51,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
   // ── Location state ────────────────────────────────────────────────────────
   double? _latitude;
   double? _longitude;
+  String? _address;
   String _locationStatus = 'Tap to get current location';
   bool _fetchingLocation = false;
 
@@ -144,7 +146,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
   Future<void> _getLocation() async {
     setState(() {
       _fetchingLocation = true;
-      _locationStatus = 'Fetching…';
+      _locationStatus = 'Fetching location…';
     });
 
     try {
@@ -191,9 +193,9 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
         setState(() {
           _latitude = pos.latitude;
           _longitude = pos.longitude;
-          _locationStatus =
-              '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+          _locationStatus = 'Fetching address…';
         });
+        await _reverseGeocode(pos.latitude, pos.longitude);
       }
     } catch (e) {
       if (mounted) {
@@ -216,9 +218,49 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
       setState(() {
         _latitude = result.latitude;
         _longitude = result.longitude;
-        _locationStatus =
-            '${result.latitude.toStringAsFixed(5)}, ${result.longitude.toStringAsFixed(5)}';
+        _locationStatus = 'Fetching address…';
       });
+      await _reverseGeocode(result.latitude, result.longitude);
+    }
+  }
+
+  Future<void> _reverseGeocode(double lat, double lon) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lon);
+      if (placemarks.isNotEmpty && mounted) {
+        final p = placemarks.first;
+
+        // 1. Collect all potential address components
+        final address = <String>[
+          if (p.name != null && p.name!.isNotEmpty) p.name!,
+          if (p.street != null && p.street!.isNotEmpty) p.street!,
+          if (p.thoroughfare != null && p.thoroughfare!.isNotEmpty)
+            p.thoroughfare!,
+          if (p.subLocality != null && p.subLocality!.isNotEmpty)
+            p.subLocality!,
+          if (p.locality != null && p.locality!.isNotEmpty) p.locality!,
+          if (p.postalCode != null && p.postalCode!.isNotEmpty) p.postalCode!,
+          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty)
+            p.administrativeArea!,
+          if (p.country != null && p.country!.isNotEmpty) p.country!,
+        ];
+
+        final addr = address.isNotEmpty
+            ? address.join(', ')
+            : '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+
+        setState(() {
+          _address = addr;
+          _locationStatus = addr;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _locationStatus =
+              '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+        });
+      }
     }
   }
 
@@ -305,6 +347,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
       pickupEnd: _pickupEnd!,
       latitude: _latitude!,
       longitude: _longitude!,
+      address: _address,
     );
 
     final success = await donationProv.createDonation(
@@ -474,7 +517,9 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
                     ),
                   ],
                 ),
+
                 const Gap(12),
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -491,7 +536,9 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
                         size: 20,
                         color: colorScheme.primary,
                       ),
+
                       const Gap(12),
+
                       Expanded(
                         child: Text(
                           _locationStatus,

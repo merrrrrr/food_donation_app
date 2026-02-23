@@ -54,9 +54,11 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
         infoWindow: InfoWindow(
           title: d.foodName,
           snippet:
-              '${d.foodType.displayLabel} · ${d.quantity}\nExpires: ${DateFormat('dd MMM, hh:mm a').format(d.expiryDate)}',
-          onTap: () => Navigator.of(context)
-              .pushNamed(AppRouter.ngoFoodDetail, arguments: d),
+              '${d.foodType.displayLabel} · ${d.quantity}\n'
+              '${d.address ?? 'No address'} · Expires: ${DateFormat('dd MMM, hh:mm a').format(d.expiryDate)}',
+          onTap: () => Navigator.of(
+            context,
+          ).pushNamed(AppRouter.ngoFoodDetail, arguments: d),
         ),
       );
     }).toSet();
@@ -82,8 +84,9 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
               style: SegmentedButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                selectedForegroundColor:
-                    Theme.of(context).colorScheme.onPrimary,
+                selectedForegroundColor: Theme.of(
+                  context,
+                ).colorScheme.onPrimary,
               ),
               segments: const [
                 ButtonSegment(
@@ -104,8 +107,8 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
       body: donationProv.isLoading
           ? const Center(child: CircularProgressIndicator())
           : _showMap
-              ? _buildMapView(donations)
-              : _buildListView(donations),
+          ? _buildMapView(donations)
+          : _buildListView(donations),
     );
   }
 
@@ -133,11 +136,7 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
           zoomControlsEnabled: true,
         ),
         // Legend overlay
-        Positioned(
-          top: 12,
-          left: 12,
-          child: _MapLegend(),
-        ),
+        Positioned(top: 12, left: 12, child: _MapLegend()),
         if (donations.isEmpty)
           const Center(
             child: Card(
@@ -196,8 +195,9 @@ class _DonationListCard extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: AppTheme.radiusMd,
-        onTap: () => Navigator.of(context)
-            .pushNamed(AppRouter.ngoFoodDetail, arguments: donation),
+        onTap: () => Navigator.of(
+          context,
+        ).pushNamed(AppRouter.ngoFoodDetail, arguments: donation),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -211,10 +211,7 @@ class _DonationListCard extends StatelessWidget {
                   color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.fastfood_rounded,
-                  color: colorScheme.primary,
-                ),
+                child: Icon(Icons.fastfood_rounded, color: colorScheme.primary),
               ),
               const Gap(12),
 
@@ -225,8 +222,9 @@ class _DonationListCard extends StatelessWidget {
                   children: [
                     Text(
                       donation.foodName,
-                      style: textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -240,33 +238,62 @@ class _DonationListCard extends StatelessWidget {
                     const Gap(4),
                     Row(
                       children: [
-                        Icon(Icons.timer_outlined,
-                            size: 13, color: expiryColor),
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 13,
+                          color: expiryColor,
+                        ),
                         const Gap(4),
                         Text(
                           'Expires: ${DateFormat('dd MMM, hh:mm a').format(donation.expiryDate)}',
-                          style: textTheme.labelSmall
-                              ?.copyWith(color: expiryColor),
+                          style: textTheme.labelSmall?.copyWith(
+                            color: expiryColor,
+                          ),
                         ),
                       ],
                     ),
                     const Gap(4),
                     Row(
                       children: [
-                        Icon(Icons.person_outline,
-                            size: 13,
-                            color: colorScheme.onSurface
-                                .withValues(alpha: 0.5)),
+                        Icon(
+                          Icons.person_outline,
+                          size: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
                         const Gap(4),
                         Text(
                           donation.donorName,
                           style: textTheme.labelSmall?.copyWith(
-                            color:
-                                colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
                     ),
+                    if (donation.address != null) ...[
+                      const Gap(4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                          const Gap(4),
+                          Expanded(
+                            child: Text(
+                              donation.address!,
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

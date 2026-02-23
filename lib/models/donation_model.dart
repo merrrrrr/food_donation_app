@@ -139,6 +139,7 @@ class DonationModel extends Equatable {
   // ── Location (captured at upload time via device GPS) ────────────────────
   final double latitude;
   final double longitude;
+  final String? address;
 
   // ── Status & NGO fields ──────────────────────────────────────────────────
   final DonationStatus status;
@@ -163,6 +164,7 @@ class DonationModel extends Equatable {
     required this.storageType,
     required this.latitude,
     required this.longitude,
+    this.address,
     this.photoUrl,
     this.status = DonationStatus.pending,
     this.ngoId,
@@ -191,6 +193,7 @@ class DonationModel extends Equatable {
       photoUrl: data['photoUrl'] as String?,
       latitude: (data['latitude'] as num).toDouble(),
       longitude: (data['longitude'] as num).toDouble(),
+      address: data['address'] as String?,
       status: DonationStatusExtension.fromJson(data['status'] as String),
       ngoId: data['ngoId'] as String?,
       ngoName: data['ngoName'] as String?,
@@ -215,6 +218,7 @@ class DonationModel extends Equatable {
       if (photoUrl != null) 'photoUrl': photoUrl,
       'latitude': latitude,
       'longitude': longitude,
+      if (address != null) 'address': address,
       'status': status.toJson(),
       if (ngoId != null) 'ngoId': ngoId,
       if (ngoName != null) 'ngoName': ngoName,
@@ -242,6 +246,7 @@ class DonationModel extends Equatable {
     String? photoUrl,
     double? latitude,
     double? longitude,
+    String? address,
     DonationStatus? status,
     String? ngoId,
     String? ngoName,
@@ -261,6 +266,7 @@ class DonationModel extends Equatable {
       photoUrl: photoUrl ?? this.photoUrl,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      address: address ?? this.address,
       status: status ?? this.status,
       ngoId: ngoId ?? this.ngoId,
       ngoName: ngoName ?? this.ngoName,
@@ -296,6 +302,7 @@ class DonationModel extends Equatable {
     photoUrl,
     latitude,
     longitude,
+    address,
     status,
     ngoId,
     evidencePhotoUrl,
