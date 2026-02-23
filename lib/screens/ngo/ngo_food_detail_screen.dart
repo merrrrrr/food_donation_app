@@ -168,11 +168,30 @@ class NgoFoodDetailScreen extends StatelessWidget {
               const Gap(20),
 
               // ── Mini map ──────────────────────────────────────────────────
-              Text(
-                'Pickup Location',
-                style: textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Pickup Location',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (donation.address != null)
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        donation.address!,
+                        textAlign: TextAlign.right,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
               const Gap(8),
               ClipRRect(

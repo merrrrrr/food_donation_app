@@ -24,7 +24,8 @@ dependencies:
   # ── Maps ───────────────────────────────────────────────────────────────────
   google_maps_flutter: ^2.9.0    # Google Maps widget with markers
   geolocator: ^13.0.1            # Device GPS / location fetching
-  geocoding: ^3.0.0              # Address ↔ LatLng conversions
+  geocoding: ^3.0.0              # Address ↔ LatLng conversions (kept as fallback)
+  http: ^1.2.2                   # HTTP client for Google Maps Geocoding REST API
 
   # ── Image Handling ─────────────────────────────────────────────────────────
   image_picker: ^1.1.2           # Camera + gallery access

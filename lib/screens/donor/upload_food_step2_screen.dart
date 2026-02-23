@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,7 @@ import 'package:food_donation_app/widgets/loading_overlay.dart';
 import 'package:food_donation_app/widgets/primary_button.dart';
 import 'package:food_donation_app/app_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  UploadFoodStep2Screen  (Step 2 of 2)
@@ -50,6 +52,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
   // ── Location state ────────────────────────────────────────────────────────
   double? _latitude;
   double? _longitude;
+  String? _address;
   String _locationStatus = 'Tap to get current location';
   bool _fetchingLocation = false;
 
@@ -144,7 +147,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
   Future<void> _getLocation() async {
     setState(() {
       _fetchingLocation = true;
-      _locationStatus = 'Fetching…';
+      _locationStatus = 'Fetching location…';
     });
 
     try {
@@ -191,9 +194,9 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
         setState(() {
           _latitude = pos.latitude;
           _longitude = pos.longitude;
-          _locationStatus =
-              '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+          _locationStatus = 'Fetching address…';
         });
+        await _reverseGeocode(pos.latitude, pos.longitude);
       }
     } catch (e) {
       if (mounted) {
@@ -216,9 +219,52 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
       setState(() {
         _latitude = result.latitude;
         _longitude = result.longitude;
-        _locationStatus =
-            '${result.latitude.toStringAsFixed(5)}, ${result.longitude.toStringAsFixed(5)}';
+        _locationStatus = 'Fetching address…';
       });
+      await _reverseGeocode(result.latitude, result.longitude);
+    }
+  }
+
+  // ── Google Maps Geocoding API ──────────────────────────────────────────────
+  /// Calls the Google Maps Geocoding REST API to convert [lat]/[lon] to a
+  /// human-readable [formatted_address].  Falls back to raw coordinates on error.
+  static const _mapsApiKey = 'AIzaSyCA7zeQ1Sek99acjsNw9e20ljurKbjgNl8';
+
+  Future<void> _reverseGeocode(double lat, double lon) async {
+    final fallback = '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+    try {
+      final uri = Uri.https('maps.googleapis.com', '/maps/api/geocode/json', {
+        'latlng': '$lat,$lon',
+        'key': _mapsApiKey,
+      });
+
+      final response = await http.get(uri);
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final status = body['status'] as String;
+
+        if (status == 'OK') {
+          final results = body['results'] as List<dynamic>;
+          if (results.isNotEmpty) {
+            final addr =
+                (results.first as Map<String, dynamic>)['formatted_address']
+                    as String;
+            setState(() {
+              _address = addr;
+              _locationStatus = addr;
+            });
+            return;
+          }
+        }
+      }
+    } catch (_) {
+      // Network or parsing error — fall through to fallback
+    }
+
+    if (mounted) {
+      setState(() => _locationStatus = fallback);
     }
   }
 
@@ -305,6 +351,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
       pickupEnd: _pickupEnd!,
       latitude: _latitude!,
       longitude: _longitude!,
+      address: _address,
     );
 
     final success = await donationProv.createDonation(
@@ -474,7 +521,9 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
                     ),
                   ],
                 ),
+
                 const Gap(12),
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -491,7 +540,9 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
                         size: 20,
                         color: colorScheme.primary,
                       ),
+
                       const Gap(12),
+
                       Expanded(
                         child: Text(
                           _locationStatus,
