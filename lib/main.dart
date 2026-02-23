@@ -23,9 +23,7 @@ void main() async {
   //       `flutterfire configure` and the generated `firebase_options.dart`
   //       file exists.  Until then, Firebase.initializeApp() with no options
   //       will read from google-services.json (Android) / GoogleService-Info.plist (iOS).
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const FoodBridgeApp());
 }
@@ -42,9 +40,7 @@ class FoodBridgeApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // AuthProvider is created first; other providers may depend on it.
-        ChangeNotifierProvider<AuthProvider>(
-          create: (_) => AuthProvider(),
-        ),
+        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
 
         // DonationProvider is independent of AuthProvider at construction time.
         // Screens call loadDonorDonations / loadAvailableDonations after login.
