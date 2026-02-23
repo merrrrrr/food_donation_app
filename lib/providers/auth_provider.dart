@@ -29,7 +29,7 @@ class AuthProvider extends ChangeNotifier {
 
   // ── Constructor ───────────────────────────────────────────────────────────
   AuthProvider({AuthService? authService})
-      : _authService = authService ?? AuthService() {
+    : _authService = authService ?? AuthService() {
     _init();
   }
 
@@ -46,10 +46,12 @@ class AuthProvider extends ChangeNotifier {
           currentUser = await _authService.fetchUserModel(firebaseUser.uid);
           authState = AuthState.signedIn;
         } catch (_) {
-          // Profile missing — sign out to recover gracefully
+          // Profile missing — reset loading and sign out to recover gracefully
+          isLoading = false;
           await _authService.signOut();
           authState = AuthState.signedOut;
         }
+        isLoading = false;
         notifyListeners();
       }
     });
@@ -81,16 +83,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ── Sign In ───────────────────────────────────────────────────────────────
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> signIn({required String email, required String password}) async {
     _setLoading(true);
     try {
-      currentUser = await _authService.signIn(
-        email: email,
-        password: password,
-      );
+      currentUser = await _authService.signIn(email: email, password: password);
       authState = AuthState.signedIn;
       _setLoading(false);
       return true;

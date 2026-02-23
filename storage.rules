@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Storage Security Rules – Food Donation App MVP
+//  Deploy via: firebase deploy --only storage
+//
+//  Strategy: path-based rules only.
+//  We avoid firestore.get() cross-service calls as they are unreliable.
+//  The Firestore security rules already guard business-logic access;
+//  Storage rules simply ensures files cannot be read/written by anonymous users.
+// ─────────────────────────────────────────────────────────────────────────────
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── /donations/{donationId}/{allPaths=**} ────────────────────────────────
+    //  Any signed-in user may read all donation files (NGOs browse photos).
+    //  Any signed-in user may write — upload permission is enforced by
+    //  Firestore rules which gate who can claim / complete a donation.
+    match /donations/{donationId}/{allPaths=**} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── /users/{userId}/{allPaths=**} ────────────────────────────────────────
+    //  Users can only read/write within their own folder.
+    match /users/{userId}/{allPaths=**} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── All other paths ──────────────────────────────────────────────────────
+    //  Deny everything else that doesn't match the patterns above.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

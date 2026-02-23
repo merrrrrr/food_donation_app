@@ -50,12 +50,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!mounted) return;
 
-    if (!success && auth.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.errorMessage!)),
-      );
+    if (success) {
+      // Small delay ensures Provider state is piped through before we pop.
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) Navigator.of(context).pop();
+      });
+    } else if (auth.errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
     }
-    // Success: WrapperScreen reacts to AuthState.signedIn automatically.
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -85,8 +89,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // ── Section header ────────────────────────────────────────
                   Text(
                     'Join FoodBridge',
-                    style: textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Gap(4),
                   Text(
@@ -100,8 +105,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // ── Role selector ─────────────────────────────────────────
                   Text(
                     'I am a...',
-                    style: textTheme.labelLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const Gap(8),
                   SegmentedButton<UserRole>(
@@ -170,7 +176,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password is required.';
+                      if (v == null || v.isEmpty)
+                        return 'Password is required.';
                       if (v.length < 6) {
                         return 'Must be at least 6 characters.';
                       }

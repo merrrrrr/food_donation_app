@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:geocoding/geocoding.dart';
+import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +19,7 @@ import 'package:food_donation_app/widgets/loading_overlay.dart';
 import 'package:food_donation_app/widgets/primary_button.dart';
 import 'package:food_donation_app/app_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  UploadFoodStep2Screen  (Step 2 of 2)
@@ -224,43 +225,46 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
     }
   }
 
+  // ── Google Maps Geocoding API ──────────────────────────────────────────────
+  /// Calls the Google Maps Geocoding REST API to convert [lat]/[lon] to a
+  /// human-readable [formatted_address].  Falls back to raw coordinates on error.
+  static const _mapsApiKey = 'AIzaSyCA7zeQ1Sek99acjsNw9e20ljurKbjgNl8';
+
   Future<void> _reverseGeocode(double lat, double lon) async {
+    final fallback = '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
     try {
-      final placemarks = await placemarkFromCoordinates(lat, lon);
-      if (placemarks.isNotEmpty && mounted) {
-        final p = placemarks.first;
+      final uri = Uri.https('maps.googleapis.com', '/maps/api/geocode/json', {
+        'latlng': '$lat,$lon',
+        'key': _mapsApiKey,
+      });
 
-        // 1. Collect all potential address components
-        final address = <String>[
-          if (p.name != null && p.name!.isNotEmpty) p.name!,
-          if (p.street != null && p.street!.isNotEmpty) p.street!,
-          if (p.thoroughfare != null && p.thoroughfare!.isNotEmpty)
-            p.thoroughfare!,
-          if (p.subLocality != null && p.subLocality!.isNotEmpty)
-            p.subLocality!,
-          if (p.locality != null && p.locality!.isNotEmpty) p.locality!,
-          if (p.postalCode != null && p.postalCode!.isNotEmpty) p.postalCode!,
-          if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty)
-            p.administrativeArea!,
-          if (p.country != null && p.country!.isNotEmpty) p.country!,
-        ];
+      final response = await http.get(uri);
+      if (!mounted) return;
 
-        final addr = address.isNotEmpty
-            ? address.join(', ')
-            : '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final status = body['status'] as String;
 
-        setState(() {
-          _address = addr;
-          _locationStatus = addr;
-        });
+        if (status == 'OK') {
+          final results = body['results'] as List<dynamic>;
+          if (results.isNotEmpty) {
+            final addr =
+                (results.first as Map<String, dynamic>)['formatted_address']
+                    as String;
+            setState(() {
+              _address = addr;
+              _locationStatus = addr;
+            });
+            return;
+          }
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _locationStatus =
-              '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
-        });
-      }
+    } catch (_) {
+      // Network or parsing error — fall through to fallback
+    }
+
+    if (mounted) {
+      setState(() => _locationStatus = fallback);
     }
   }
 
