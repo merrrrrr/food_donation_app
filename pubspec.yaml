@@ -1,7 +1,7 @@
 name: food_donation_app
-description: "A new Flutter project."
+description: "A food donation platform connecting Donors and NGOs."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: ^3.8.1
@@ -10,6 +10,38 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # ── Firebase Core ──────────────────────────────────────────────────────────
+  firebase_core: ^3.6.0          # Required by every Firebase plugin
+  firebase_auth: ^5.3.1          # Email/password + Google auth
+  cloud_firestore: ^5.4.3        # Primary NoSQL database
+  firebase_storage: ^12.3.2      # Photo / evidence uploads
+
+  # ── State Management ───────────────────────────────────────────────────────
+  # Provider is the recommended choice for an MVP: minimal boilerplate,
+  # excellent Flutter team support, and easy to graduate to Riverpod later.
+  provider: ^6.1.2
+
+  # ── Maps ───────────────────────────────────────────────────────────────────
+  google_maps_flutter: ^2.9.0    # Google Maps widget with markers
+  geolocator: ^13.0.1            # Device GPS / location fetching
+  geocoding: ^3.0.0              # Address ↔ LatLng conversions
+
+  # ── Image Handling ─────────────────────────────────────────────────────────
+  image_picker: ^1.1.2           # Camera + gallery access
+  cached_network_image: ^3.4.1   # Efficient remote image caching
+
+  # ── UI & UX Helpers ────────────────────────────────────────────────────────
+  intl: ^0.20.1                  # Date/time formatting (DateFormat)
+  flutter_svg: ^2.0.10+1         # SVG asset support
+  gap: ^3.0.1                    # Readable spacing widget
+
+  # ── Typography ─────────────────────────────────────────────────────────────
+  google_fonts: ^6.2.1           # Inter typeface via Google Fonts
+
+  # ── Utilities ──────────────────────────────────────────────────────────────
+  uuid: ^4.5.1                   # RFC-4122 UUID generation for document IDs
+  equatable: ^2.0.5              # Value equality for model classes
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -17,3 +49,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/

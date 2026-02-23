@@ -1,0 +1,28 @@
+﻿Analyzing food_donation_app...                                  
+
+   info - Statements in an if should be enclosed in a block - lib\screens\donor\upload_food_step2_screen.dart:167:11 - curly_braces_in_flow_control_structures
+
+flutter : 1 issue 
+found. (ran in 
+2.6s)
+At line:1 char:1
++ flutter analyze 
+--no-fatal-infos 
+2>&1 | Out-File 
+-FilePath 
+analyze_ou ...
++ ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo 
+             : No  
+  tSpecified: (1   
+  issue found.     
+(ran in 2.6s):    
+String) [], Re    
+moteException
+    + FullyQualifi 
+   edErrorId : Na  
+  tiveCommandErr   
+ or
+ 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "278162503848",
+    "project_id": "food-donation-app-beb27",
+    "storage_bucket": "food-donation-app-beb27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278162503848:android:9f5ed3915852c6f9b52a9d",
+        "android_client_info": {
+          "package_name": "com.example.food_donation_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAclgMfosWIGvNc2UIz4E19mm5Te_DctNM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

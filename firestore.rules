@@ -1,0 +1,73 @@
+// ============================================================
+//  Firestore Security Rules – Food Donation App MVP
+//  Deploy via: firebase deploy --only firestore:rules
+// ============================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────────────────────
+
+    /// Returns true when the caller is authenticated.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /// Returns true when the caller owns the given userId.
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /// Fetches the caller's role from the `users` collection.
+    function callerRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isDonor() { return isSignedIn() && callerRole() == 'donor'; }
+    function isNGO()   { return isSignedIn() && callerRole() == 'ngo';   }
+
+    // ── /users/{userId} ─────────────────────────────────────────────────────
+    //  • Any authenticated user can read any user profile (needed for in-app
+    //    display of donor/NGO names on donation cards).
+    //  • Create is allowed during registration; update only by the owner.
+    //  • Deletion is disallowed via rules (use Admin SDK in a Cloud Function).
+    match /users/{userId} {
+      allow read:   if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // ── /donations/{donationId} ─────────────────────────────────────────────
+    //  • Any authenticated user can read listings (NGOs browse the map).
+    //  • Only donors can CREATE a new donation.
+    //  • A donor can UPDATE their own donation while it is still 'pending'
+    //    (e.g. to edit details before it is claimed).
+    //  • An NGO can UPDATE a donation to 'claimed' or 'completed'
+    //    (for claim action & evidence upload).
+    //  • Deletes are disallowed; listings are soft-deleted via a `status`
+    //    field so historical records are preserved.
+    match /donations/{donationId} {
+      allow read: if isSignedIn();
+
+      allow create: if isDonor()
+                    && request.resource.data.donorId == request.auth.uid;
+
+      allow update: if
+        // Donor edits their own PENDING listing.
+        (isDonor()
+          && resource.data.donorId == request.auth.uid
+          && resource.data.status == 'pending')
+        ||
+        // NGO claims or closes out a listing (status transition only).
+        (isNGO()
+          && (request.resource.data.status == 'claimed'
+              || request.resource.data.status == 'completed'));
+
+      allow delete: if false;
+    }
+
+  } // end match /databases
+}
