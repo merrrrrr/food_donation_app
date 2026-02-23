@@ -6,19 +6,19 @@ import 'package:food_donation_app/screens/auth/login_screen.dart';
 import 'package:food_donation_app/screens/auth/register_screen.dart';
 
 // Screen imports — donor
-import 'package:food_donation_app/screens/donor/donor_home_screen.dart';
+import 'package:food_donation_app/screens/donor/donor_main_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_profile_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_result_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_status_screen.dart';
+import 'package:food_donation_app/screens/donor/location_picker_screen.dart';
 import 'package:food_donation_app/screens/donor/upload_food_screen.dart';
 import 'package:food_donation_app/screens/donor/upload_food_step2_screen.dart';
-import 'package:food_donation_app/screens/donor/location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 // Screen imports — NGO
-import 'package:food_donation_app/screens/ngo/ngo_home_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_discovery_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_food_detail_screen.dart';
+import 'package:food_donation_app/screens/ngo/ngo_main_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_result_screen.dart';
 
@@ -60,7 +60,7 @@ abstract final class AppRouter {
       register => _slide(const RegisterScreen(), settings),
 
       // Donor
-      donorHome => _fade(const DonorHomeScreen(), settings),
+      donorHome => _fade(const DonorMainScreen(), settings),
       donorUpload => _slide(const UploadFoodScreen(), settings),
       donorUploadStep2 => _slide(const UploadFoodStep2Screen(), settings),
       donorStatus => _slide(const DonorStatusScreen(), settings),
@@ -72,7 +72,7 @@ abstract final class AppRouter {
       ),
 
       // NGO
-      ngoHome => _fade(const NgoHomeScreen(), settings),
+      ngoHome => _fade(const NgoMainScreen(), settings),
       ngoDiscovery => _slide(const NgoDiscoveryScreen(), settings),
       ngoFoodDetail => _slide(const NgoFoodDetailScreen(), settings),
       ngoResult => _slide(const NgoResultScreen(), settings),

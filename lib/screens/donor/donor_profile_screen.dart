@@ -33,9 +33,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         final viewInsets = MediaQuery.of(ctx).viewInsets;
@@ -54,10 +52,9 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
               children: [
                 Text(
                   'Edit Profile',
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Gap(16),
                 TextFormField(
@@ -76,14 +73,17 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                 const Gap(12),
                 TextFormField(
                   controller: phoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Phone (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Phone (optional)',
+                  ),
                   keyboardType: TextInputType.phone,
                 ),
                 const Gap(12),
                 TextFormField(
                   controller: addressCtrl,
-                  decoration:
-                      const InputDecoration(labelText: 'Address (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Address (optional)',
+                  ),
                   maxLines: 2,
                 ),
                 const Gap(20),
@@ -93,8 +93,9 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                     final success = await auth.updateProfile(
                       displayName: nameCtrl.text,
                       phone: phoneCtrl.text.isEmpty ? null : phoneCtrl.text,
-                      address:
-                          addressCtrl.text.isEmpty ? null : addressCtrl.text,
+                      address: addressCtrl.text.isEmpty
+                          ? null
+                          : addressCtrl.text,
                     );
                     if (!mounted) return;
                     if (!success && auth.errorMessage != null) {
@@ -121,9 +122,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
       builder: (ctx) {
         final colorScheme = Theme.of(ctx).colorScheme;
         return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppTheme.radiusMd,
-          ),
+          shape: const RoundedRectangleBorder(borderRadius: AppTheme.radiusMd),
           title: const Text('Log out?'),
           content: const Text(
             'You will be signed out and returned to the login page.',
@@ -150,10 +149,9 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
       if (mounted) {
         // Return to the root wrapper so it can decide which
         // screen to show based on auth state.
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRouter.root,
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRouter.root, (route) => false);
       }
     }
 
@@ -185,10 +183,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('My Profile'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          automaticallyImplyLeading: false,
           actions: [
             IconButton(
               icon: const Icon(Icons.edit_outlined),
@@ -337,10 +332,9 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                     return _HistoryTile(
                       donation: d,
                       onTap: d.status == DonationStatus.completed
-                          ? () => Navigator.of(context).pushNamed(
-                                AppRouter.donorResult,
-                                arguments: d,
-                              )
+                          ? () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRouter.donorResult, arguments: d)
                           : null,
                     );
                   },
@@ -361,11 +355,12 @@ class _StatTile extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  const _StatTile(
-      {required this.label,
-      required this.value,
-      required this.icon,
-      required this.color});
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -383,16 +378,17 @@ class _StatTile extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold, color: color),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
-                Text(label,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: color)),
+                Text(
+                  label,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: color),
+                ),
               ],
             ),
           ],
@@ -411,18 +407,17 @@ class _HistoryTile extends StatelessWidget {
   const _HistoryTile({required this.donation, this.onTap});
 
   Color _statusColor() => switch (donation.status) {
-        DonationStatus.pending => AppTheme.statusPending,
-        DonationStatus.claimed => AppTheme.statusClaimed,
-        DonationStatus.completed => AppTheme.statusCompleted,
-        DonationStatus.cancelled => Colors.grey,
-      };
+    DonationStatus.pending => AppTheme.statusPending,
+    DonationStatus.claimed => AppTheme.statusClaimed,
+    DonationStatus.completed => AppTheme.statusCompleted,
+    DonationStatus.cancelled => Colors.grey,
+  };
 
   @override
   Widget build(BuildContext context) {
     final color = _statusColor();
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.15),
         child: Icon(Icons.fastfood_rounded, color: color, size: 20),
@@ -434,7 +429,9 @@ class _HistoryTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        DateFormat('dd MMM yyyy').format(donation.createdAt ?? donation.expiryDate),
+        DateFormat(
+          'dd MMM yyyy',
+        ).format(donation.createdAt ?? donation.expiryDate),
         style: const TextStyle(fontSize: 12),
       ),
       trailing: Container(
@@ -446,7 +443,10 @@ class _HistoryTile extends StatelessWidget {
         child: Text(
           donation.status.displayLabel,
           style: TextStyle(
-              fontSize: 11, color: color, fontWeight: FontWeight.w600),
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       onTap: onTap,

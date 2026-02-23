@@ -70,17 +70,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
         .length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('FoodBridge'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
-            onPressed: () =>
-                Navigator.of(context).pushNamed(AppRouter.ngoProfile),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('FoodBridge')),
       body: RefreshIndicator(
         onRefresh: () async =>
             context.read<DonationProvider>().loadAvailableDonations(),
@@ -95,8 +85,9 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor:
-                        colorScheme.primaryContainer.withValues(alpha: 0.8),
+                    backgroundColor: colorScheme.primaryContainer.withValues(
+                      alpha: 0.8,
+                    ),
                     child: Text(
                       (auth.currentUser?.displayName.isNotEmpty == true)
                           ? auth.currentUser!.displayName[0].toUpperCase()
@@ -111,8 +102,9 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                   Expanded(
                     child: Text(
                       'Hello, ${auth.currentUser?.displayName.split(' ').first ?? 'there'}',
-                      style: textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -290,15 +282,6 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'discoveryFAB',
-        onPressed: () =>
-            Navigator.of(context).pushNamed(AppRouter.ngoDiscovery),
-        icon: const Icon(Icons.map_outlined),
-        label: const Text('Discover Food'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
       ),
     );
   }

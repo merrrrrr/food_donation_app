@@ -53,17 +53,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
         .length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('FoodBridge'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
-            onPressed: () =>
-                Navigator.of(context).pushNamed(AppRouter.donorProfile),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('FoodBridge')),
       body: RefreshIndicator(
         onRefresh: () async {
           final uid = auth.currentUser?.uid;
@@ -82,8 +72,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor:
-                        colorScheme.primaryContainer.withValues(alpha: 0.8),
+                    backgroundColor: colorScheme.primaryContainer.withValues(
+                      alpha: 0.8,
+                    ),
                     child: Text(
                       (auth.currentUser?.displayName.isNotEmpty == true)
                           ? auth.currentUser!.displayName[0].toUpperCase()
@@ -98,8 +89,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                   Expanded(
                     child: Text(
                       'Hello, ${auth.currentUser?.displayName.split(' ').first ?? 'there'}',
-                      style: textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -123,8 +115,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
               // ── Stats row ─────────────────────────────────────────────────
               Text(
                 'Your Donations',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Gap(12),
               Row(
@@ -158,26 +151,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                 ],
               ),
               const Gap(24),
-
-              // ── Quick action: view status ──────────────────────────────────
-              OutlinedButton.icon(
-                icon: const Icon(Icons.list_alt_rounded),
-                label: const Text('View Active Donations'),
-                onPressed: () =>
-                    Navigator.of(context).pushNamed(AppRouter.donorStatus),
-              ),
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'uploadFAB',
-        onPressed: () =>
-            Navigator.of(context).pushNamed(AppRouter.donorUpload),
-        icon: const Icon(Icons.add),
-        label: const Text('Upload Food'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
       ),
     );
   }
@@ -212,17 +188,18 @@ class _UploadCTACard extends StatelessWidget {
                     Text(
                       'Have surplus food?',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
                     ),
                     const Gap(6),
                     Text(
                       'List it in under 2 minutes and help an NGO near you.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onPrimaryContainer
-                                .withValues(alpha: 0.8),
-                          ),
+                        color: colorScheme.onPrimaryContainer.withValues(
+                          alpha: 0.8,
+                        ),
+                      ),
                     ),
                     const Gap(14),
                     FilledButton.icon(
@@ -277,17 +254,16 @@ class _StatCard extends StatelessWidget {
             const Gap(6),
             Text(
               '$count',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold, color: color),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
             Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: color),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: color),
             ),
           ],
         ),

@@ -34,9 +34,7 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         final viewInsets = MediaQuery.of(ctx).viewInsets;
@@ -55,15 +53,16 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
               children: [
                 Text(
                   'Edit Profile',
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Gap(16),
                 TextFormField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Organisation Name'),
+                  decoration: const InputDecoration(
+                    labelText: 'Organisation Name',
+                  ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
                       return 'Name is required.';
@@ -77,14 +76,17 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                 const Gap(12),
                 TextFormField(
                   controller: phoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Phone (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Phone (optional)',
+                  ),
                   keyboardType: TextInputType.phone,
                 ),
                 const Gap(12),
                 TextFormField(
                   controller: addressCtrl,
-                  decoration:
-                      const InputDecoration(labelText: 'Address (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Address (optional)',
+                  ),
                   maxLines: 2,
                 ),
                 const Gap(20),
@@ -94,8 +96,9 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                     final success = await auth.updateProfile(
                       displayName: nameCtrl.text,
                       phone: phoneCtrl.text.isEmpty ? null : phoneCtrl.text,
-                      address:
-                          addressCtrl.text.isEmpty ? null : addressCtrl.text,
+                      address: addressCtrl.text.isEmpty
+                          ? null
+                          : addressCtrl.text,
                     );
                     if (!mounted) return;
                     if (!success && auth.errorMessage != null) {
@@ -115,15 +118,14 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
       },
     );
   }
+
   Future<bool> _handleExit(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (ctx) {
         final colorScheme = Theme.of(ctx).colorScheme;
         return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppTheme.radiusMd,
-          ),
+          shape: const RoundedRectangleBorder(borderRadius: AppTheme.radiusMd),
           title: const Text('Log out?'),
           content: const Text(
             'You will be signed out and returned to the login page.',
@@ -148,10 +150,9 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
     if (shouldLogout == true && mounted) {
       await context.read<AuthProvider>().signOut();
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRouter.root,
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRouter.root, (route) => false);
       }
     }
 
@@ -189,10 +190,7 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('My Profile'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          automaticallyImplyLeading: false,
           actions: [
             IconButton(
               icon: const Icon(Icons.edit_outlined),
@@ -246,15 +244,15 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                     const Gap(14),
                     Text(
                       user?.displayName ?? '—',
-                      style: textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const Gap(4),
                     Text(
                       user?.email ?? '—',
                       style: textTheme.bodyMedium?.copyWith(
-                        color:
-                            colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     const Gap(10),
@@ -264,14 +262,16 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.secondaryContainer
-                            .withValues(alpha: 0.8),
+                        color: colorScheme.secondaryContainer.withValues(
+                          alpha: 0.8,
+                        ),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         'NGO',
-                        style: textTheme.labelSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -306,8 +306,9 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
               // ── History ────────────────────────────────────────────────────
               Text(
                 'Claim History',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Gap(12),
 
@@ -334,10 +335,9 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                     return _HistoryTile(
                       donation: d,
                       onTap: d.status == DonationStatus.claimed
-                          ? () => Navigator.of(context).pushNamed(
-                                AppRouter.ngoResult,
-                                arguments: d,
-                              )
+                          ? () => Navigator.of(
+                              context,
+                            ).pushNamed(AppRouter.ngoResult, arguments: d)
                           : null,
                     );
                   },
@@ -358,11 +358,12 @@ class _StatTile extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  const _StatTile(
-      {required this.label,
-      required this.value,
-      required this.icon,
-      required this.color});
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -381,16 +382,15 @@ class _StatTile extends StatelessWidget {
                 Text(
                   value,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: color,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
                 Text(
                   label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(color: color),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: color),
                 ),
               ],
             ),
@@ -407,22 +407,20 @@ class _HistoryTile extends StatelessWidget {
   const _HistoryTile({required this.donation, this.onTap});
 
   Color _statusColor() => switch (donation.status) {
-        DonationStatus.pending => AppTheme.statusPending,
-        DonationStatus.claimed => AppTheme.statusClaimed,
-        DonationStatus.completed => AppTheme.statusCompleted,
-        DonationStatus.cancelled => Colors.grey,
-      };
+    DonationStatus.pending => AppTheme.statusPending,
+    DonationStatus.claimed => AppTheme.statusClaimed,
+    DonationStatus.completed => AppTheme.statusCompleted,
+    DonationStatus.cancelled => Colors.grey,
+  };
 
   @override
   Widget build(BuildContext context) {
     final color = _statusColor();
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.15),
-        child:
-            Icon(Icons.volunteer_activism_rounded, color: color, size: 20),
+        child: Icon(Icons.volunteer_activism_rounded, color: color, size: 20),
       ),
       title: Text(
         donation.foodName,
@@ -438,15 +436,15 @@ class _HistoryTile extends StatelessWidget {
             style: const TextStyle(fontSize: 11),
           ),
           Text(
-            DateFormat('dd MMM yyyy')
-                .format(donation.createdAt ?? donation.expiryDate),
+            DateFormat(
+              'dd MMM yyyy',
+            ).format(donation.createdAt ?? donation.expiryDate),
             style: const TextStyle(fontSize: 11),
           ),
         ],
       ),
       trailing: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
@@ -454,7 +452,10 @@ class _HistoryTile extends StatelessWidget {
         child: Text(
           donation.status.displayLabel,
           style: TextStyle(
-              fontSize: 11, color: color, fontWeight: FontWeight.w600),
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       onTap: onTap,

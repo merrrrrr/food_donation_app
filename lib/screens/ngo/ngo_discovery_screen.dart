@@ -76,6 +76,7 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Discover Food'),
+        automaticallyImplyLeading: false,
         actions: [
           // Map / List toggle
           Padding(

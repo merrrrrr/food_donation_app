@@ -61,6 +61,7 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Donations'),
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -80,12 +81,6 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
                 _DonationList(donations: completed, showResultButton: true),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'statusUploadFAB',
-        onPressed: () => Navigator.of(context).pushNamed(AppRouter.donorUpload),
-        tooltip: 'Upload Food',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
