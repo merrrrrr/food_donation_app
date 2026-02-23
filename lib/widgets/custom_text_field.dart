@@ -63,11 +63,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
           hintText: widget.hint,
           prefixIcon:
               widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
-          filled: true,
-          // Remove visible borders so fields look like soft cards.
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
           // Show eye toggle only for password fields
           suffixIcon: widget.isPassword
               ? IconButton(

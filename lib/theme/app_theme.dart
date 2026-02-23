@@ -8,15 +8,15 @@ import 'package:google_fonts/google_fonts.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 abstract final class AppTheme {
   // ── Brand colours ─────────────────────────────────────────────────────────
-  // Main brand colours provided by product:
-  // - #C49BEB : soft lilac (primary)
+  // Main brand colours:
+  // - #A07DD1 : soft purple (primary)
   // - #79DAC7 : mint green (secondary)
-  static const Color primary = Color(0xFFC49BEB);
-  static const Color primaryContainer = Color(0xFFE7D5F7);
+  static const Color primary = Color(0xFFA07DD1);
+  static const Color primaryContainer = Color(0xFFB89BE0);
   static const Color secondary = Color(0xFF79DAC7);
   static const Color error = Color(0xFFB00020);
   // App background
-  static const Color surface = Color(0xFFFFFDF7);
+  static const Color surface = Color(0xFFFFFCEB);
   static const Color onSurface = Color(0xFF22232A);
 
   // ── Status colours (used for donation status chips & map pins) ─────────────
