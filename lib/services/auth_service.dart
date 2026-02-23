@@ -90,6 +90,30 @@ class AuthService {
     return UserModel.fromDocument(snap);
   }
 
+  // ── Update profile ────────────────────────────────────────────────────────
+  /// Partially updates a user's profile document and returns the new model.
+  Future<UserModel> updateUserProfile({
+    required String uid,
+    String? displayName,
+    String? phone,
+    String? address,
+    String? photoUrl,
+  }) async {
+    final Map<String, dynamic> data = {};
+    if (displayName != null) data['displayName'] = displayName.trim();
+    if (phone != null) data['phone'] = phone.trim();
+    if (address != null) data['address'] = address.trim();
+    if (photoUrl != null) data['photoUrl'] = photoUrl;
+
+    if (data.isEmpty) {
+      // Nothing to update; just return current snapshot.
+      return fetchUserModel(uid);
+    }
+
+    await _usersCol.doc(uid).update(data);
+    return fetchUserModel(uid);
+  }
+
   // ── Error mapping ─────────────────────────────────────────────────────────
   /// Converts Firebase error codes into human-readable messages.
   Exception _mapAuthException(FirebaseAuthException e) {

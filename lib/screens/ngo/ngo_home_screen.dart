@@ -54,11 +54,6 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRouter.ngoProfile),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign Out',
-            onPressed: () => context.read<AuthProvider>().signOut(),
-          ),
         ],
       ),
       body: RefreshIndicator(
@@ -71,10 +66,31 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Greeting ─────────────────────────────────────────────────
-              Text(
-                'Hello, ${auth.currentUser?.displayName.split(' ').first ?? 'there'} 👋',
-                style: textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor:
+                        colorScheme.primaryContainer.withValues(alpha: 0.8),
+                    child: Text(
+                      (auth.currentUser?.displayName.isNotEmpty == true)
+                          ? auth.currentUser!.displayName[0].toUpperCase()
+                          : '?',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const Gap(12),
+                  Expanded(
+                    child: Text(
+                      'Hello, ${auth.currentUser?.displayName.split(' ').first ?? 'there'}',
+                      style: textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
               const Gap(4),
               Text(

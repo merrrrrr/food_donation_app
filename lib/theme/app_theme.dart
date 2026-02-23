@@ -8,18 +8,22 @@ import 'package:google_fonts/google_fonts.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 abstract final class AppTheme {
   // ── Brand colours ─────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF2E7D32);     // Forest green
-  static const Color primaryContainer = Color(0xFFA5D6A7);
-  static const Color secondary = Color(0xFFF57F17);   // Warm amber accent
+  // Main brand colours provided by product:
+  // - #C49BEB : soft lilac (primary)
+  // - #79DAC7 : mint green (secondary)
+  static const Color primary = Color(0xFFC49BEB);
+  static const Color primaryContainer = Color(0xFFE7D5F7);
+  static const Color secondary = Color(0xFF79DAC7);
   static const Color error = Color(0xFFB00020);
-  static const Color surface = Color(0xFFF9FBF9);
-  static const Color onSurface = Color(0xFF1B2320);
+  // App background
+  static const Color surface = Color(0xFFFFFDF7);
+  static const Color onSurface = Color(0xFF22232A);
 
   // ── Status colours (used for donation status chips & map pins) ─────────────
-  static const Color statusPending = Color(0xFF1565C0);   // Blue
-  static const Color statusClaimed = Color(0xFFF57F17);   // Amber
-  static const Color statusCompleted = Color(0xFF2E7D32); // Green
-  static const Color statusExpiringSoon = Color(0xFFC62828); // Red
+  static const Color statusPending = Color(0xFF4E7BBE);       // Muted blue
+  static const Color statusClaimed = Color(0xFFF2A451);       // Soft amber
+  static const Color statusCompleted = Color(0xFF4D9A7B);     // Deep teal-green
+  static const Color statusExpiringSoon = Color(0xFFC94A4A);  // Warm red
 
   // ── Shared shape ──────────────────────────────────────────────────────────
   static const BorderRadius radiusMd = BorderRadius.all(Radius.circular(12));
@@ -27,11 +31,19 @@ abstract final class AppTheme {
 
   // ── Light ThemeData ───────────────────────────────────────────────────────
   static ThemeData get light {
-    final colorScheme = ColorScheme.fromSeed(
+    final baseScheme = ColorScheme.fromSeed(
       seedColor: primary,
       brightness: Brightness.light,
       surface: surface,
       error: error,
+    );
+    final colorScheme = baseScheme.copyWith(
+      primary: primary,
+      onPrimary: Colors.white,
+      primaryContainer: primaryContainer,
+      secondary: secondary,
+      secondaryContainer: const Color(0xFFE1DFEF),
+      onSecondaryContainer: onSurface,
     );
 
     // Build the Inter-based text theme
@@ -45,12 +57,12 @@ abstract final class AppTheme {
       textTheme: textTheme,
       scaffoldBackgroundColor: surface,
       appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
+        backgroundColor: surface,
+        foregroundColor: onSurface,
         centerTitle: true,
-        elevation: 0,
+        elevation: 0.5,
         titleTextStyle: GoogleFonts.inter(
-          color: colorScheme.onPrimary,
+          color: onSurface,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),

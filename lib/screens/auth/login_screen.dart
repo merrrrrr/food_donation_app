@@ -97,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: 'you@example.com',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
+                    onFieldSubmitted: (_) => _onSignIn(),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
                         return 'Email is required.';
@@ -113,8 +114,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'Password',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
+                    onFieldSubmitted: (_) => _onSignIn(),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password is required.';
+                      if (v == null || v.isEmpty) {
+                        return 'Password is required.';
+                      }
                       return null;
                     },
                   ),
