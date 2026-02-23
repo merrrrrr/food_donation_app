@@ -14,6 +14,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final void Function(String)? onFieldSubmitted;
   final int maxLines;
   final bool readOnly;
   final VoidCallback? onTap;
@@ -28,6 +29,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.validator,
     this.onChanged,
+    this.onFieldSubmitted,
     this.maxLines = 1,
     this.readOnly = false,
     this.onTap,
@@ -42,30 +44,41 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: widget.controller,
-      obscureText: widget.isPassword && _obscure,
-      keyboardType: widget.keyboardType,
-      validator: widget.validator,
-      onChanged: widget.onChanged,
-      maxLines: widget.isPassword ? 1 : widget.maxLines,
-      readOnly: widget.readOnly,
-      onTap: widget.onTap,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        hintText: widget.hint,
-        prefixIcon:
-            widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
-        // Show eye toggle only for password fields
-        suffixIcon: widget.isPassword
-            ? IconButton(
-                icon: Icon(
-                  _obscure ? Icons.visibility_off : Icons.visibility,
-                ),
-                onPressed: () => setState(() => _obscure = !_obscure),
-                tooltip: _obscure ? 'Show password' : 'Hide password',
-              )
-            : null,
+    return Material(
+      elevation: 2,
+      shadowColor: Colors.black12,
+      borderRadius: BorderRadius.circular(30),
+      child: TextFormField(
+        controller: widget.controller,
+        obscureText: widget.isPassword && _obscure,
+        keyboardType: widget.keyboardType,
+        validator: widget.validator,
+        onChanged: widget.onChanged,
+        onFieldSubmitted: widget.onFieldSubmitted,
+        maxLines: widget.isPassword ? 1 : widget.maxLines,
+        readOnly: widget.readOnly,
+        onTap: widget.onTap,
+        decoration: InputDecoration(
+          labelText: widget.label,
+          hintText: widget.hint,
+          prefixIcon:
+              widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
+          filled: true,
+          // Remove visible borders so fields look like soft cards.
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          // Show eye toggle only for password fields
+          suffixIcon: widget.isPassword
+              ? IconButton(
+                  icon: Icon(
+                    _obscure ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  tooltip: _obscure ? 'Show password' : 'Hide password',
+                )
+              : null,
+        ),
       ),
     );
   }

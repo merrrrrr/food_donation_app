@@ -140,6 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ? 'Ahmad bin Ali'
                         : 'Pertubuhan Kebajikan XYZ',
                     prefixIcon: Icons.person_outline,
+                    onFieldSubmitted: (_) => _onRegister(),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
                         return 'Name is required.';
@@ -159,6 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     hint: 'you@example.com',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
+                    onFieldSubmitted: (_) => _onRegister(),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
                         return 'Email is required.';
@@ -175,9 +177,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     label: 'Password',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
+                    onFieldSubmitted: (_) => _onRegister(),
                     validator: (v) {
+<<<<<<< main
+                      if (v == null || v.isEmpty) {
+                        return 'Password is required.';
+                      }
+=======
                       if (v == null || v.isEmpty)
                         return 'Password is required.';
+>>>>>>> main
                       if (v.length < 6) {
                         return 'Must be at least 6 characters.';
                       }
@@ -192,6 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     label: 'Confirm Password',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
+                    onFieldSubmitted: (_) => _onRegister(),
                     validator: (v) {
                       if (v != _passwordCtrl.text) {
                         return 'Passwords do not match.';

@@ -20,7 +20,8 @@ class AuthProvider extends ChangeNotifier {
 
   // ── Public state ──────────────────────────────────────────────────────────
   UserModel? currentUser;
-  AuthState authState = AuthState.unknown;
+  // Start signed-out so the first visible screen is Login.
+  AuthState authState = AuthState.signedOut;
   bool isLoading = false;
   String? errorMessage;
 
@@ -39,6 +40,8 @@ class AuthProvider extends ChangeNotifier {
       if (firebaseUser == null) {
         currentUser = null;
         authState = AuthState.signedOut;
+<<<<<<< main
+=======
         notifyListeners();
       } else {
         try {
@@ -53,7 +56,9 @@ class AuthProvider extends ChangeNotifier {
         }
         isLoading = false;
         notifyListeners();
+>>>>>>> main
       }
+      notifyListeners();
     });
   }
 
@@ -103,6 +108,33 @@ class AuthProvider extends ChangeNotifier {
     currentUser = null;
     authState = AuthState.signedOut;
     notifyListeners();
+  }
+
+  // ── Update profile ────────────────────────────────────────────────────────
+  Future<bool> updateProfile({
+    String? displayName,
+    String? phone,
+    String? address,
+    String? photoUrl,
+  }) async {
+    if (currentUser == null) return false;
+
+    _setLoading(true);
+    try {
+      currentUser = await _authService.updateUserProfile(
+        uid: currentUser!.uid,
+        displayName: displayName,
+        phone: phone,
+        address: address,
+        photoUrl: photoUrl,
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _setLoading(false);
+      return false;
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
