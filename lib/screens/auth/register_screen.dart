@@ -179,14 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     isPassword: true,
                     onFieldSubmitted: (_) => _onRegister(),
                     validator: (v) {
-<<<<<<< main
                       if (v == null || v.isEmpty) {
                         return 'Password is required.';
                       }
-=======
-                      if (v == null || v.isEmpty)
-                        return 'Password is required.';
->>>>>>> main
                       if (v.length < 6) {
                         return 'Must be at least 6 characters.';
                       }

@@ -40,8 +40,6 @@ class AuthProvider extends ChangeNotifier {
       if (firebaseUser == null) {
         currentUser = null;
         authState = AuthState.signedOut;
-<<<<<<< main
-=======
         notifyListeners();
       } else {
         try {
@@ -56,9 +54,7 @@ class AuthProvider extends ChangeNotifier {
         }
         isLoading = false;
         notifyListeners();
->>>>>>> main
       }
-      notifyListeners();
     });
   }
 
