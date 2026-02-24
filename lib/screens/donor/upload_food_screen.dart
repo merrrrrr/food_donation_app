@@ -202,7 +202,9 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  height: 180,
+                  constraints: BoxConstraints(
+                    minHeight: _pickedImage == null ? 180 : 0,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest.withValues(
                       alpha: 0.5,
@@ -220,7 +222,7 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
                           borderRadius: AppTheme.radiusMd,
                           child: Image.file(
                             File(_pickedImage!.path),
-                            fit: BoxFit.cover,
+                            fit: BoxFit.fitWidth,
                             width: double.infinity,
                           ),
                         )

@@ -71,8 +71,7 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
     if (_evidenceImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Please take or select a photo as evidence first.'),
+          content: Text('Please take or select a photo as evidence first.'),
         ),
       );
       return;
@@ -93,7 +92,8 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              donationProv.errorMessage ?? 'Upload failed. Please retry.'),
+            donationProv.errorMessage ?? 'Upload failed. Please retry.',
+          ),
         ),
       );
     }
@@ -126,8 +126,9 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                 Text(
                   'Handover Complete!',
                   textAlign: TextAlign.center,
-                  style: textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Gap(8),
                 Text(
@@ -142,9 +143,9 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.home_outlined),
                   label: const Text('Back to Dashboard'),
-                  onPressed: () => Navigator.of(context)
-                      .pushNamedAndRemoveUntil(
-                          AppRouter.ngoHome, (_) => false),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil(AppRouter.ngoHome, (_) => false),
                 ),
               ],
             ),
@@ -175,8 +176,10 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.local_shipping_outlined,
-                        color: AppTheme.statusClaimed),
+                    const Icon(
+                      Icons.local_shipping_outlined,
+                      color: AppTheme.statusClaimed,
+                    ),
                     const Gap(12),
                     Expanded(
                       child: Column(
@@ -185,14 +188,17 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                           Text(
                             'Donation Claimed!',
                             style: textTheme.titleSmall?.copyWith(
-                                color: AppTheme.statusClaimed,
-                                fontWeight: FontWeight.bold),
+                              color: AppTheme.statusClaimed,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             donation.foodName,
                             style: textTheme.bodySmall?.copyWith(
-                                color: AppTheme.statusClaimed
-                                    .withValues(alpha: 0.8)),
+                              color: AppTheme.statusClaimed.withValues(
+                                alpha: 0.8,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -205,8 +211,9 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
               // ── Instructions ──────────────────────────────────────────────
               Text(
                 'Upload Evidence Photo',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Gap(8),
               Text(
@@ -222,10 +229,13 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  height: 220,
+                  constraints: BoxConstraints(
+                    minHeight: _evidenceImage == null ? 220 : 0,
+                  ),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
                     borderRadius: AppTheme.radiusMd,
                     border: Border.all(
                       color: _evidenceImage != null
@@ -239,7 +249,7 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                           borderRadius: AppTheme.radiusMd,
                           child: Image.file(
                             File(_evidenceImage!.path),
-                            fit: BoxFit.cover,
+                            fit: BoxFit.fitWidth,
                             width: double.infinity,
                           ),
                         )
@@ -249,15 +259,17 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                             Icon(
                               Icons.add_a_photo_outlined,
                               size: 52,
-                              color: colorScheme.onSurface
-                                  .withValues(alpha: 0.35),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.35,
+                              ),
                             ),
                             const Gap(12),
                             Text(
                               'Tap to take or select a photo',
                               style: textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                           ],

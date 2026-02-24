@@ -277,6 +277,7 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                   ],
                 ),
               ),
+
               const Gap(24),
 
               // ── Stats row ─────────────────────────────────────────────────
@@ -290,7 +291,9 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                       color: AppTheme.statusClaimed,
                     ),
                   ),
-                  const Gap(10),
+
+                  const Gap(0),
+
                   Expanded(
                     child: _StatTile(
                       label: 'Completed',
@@ -301,6 +304,7 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                   ),
                 ],
               ),
+
               const Gap(24),
 
               // ── History ────────────────────────────────────────────────────
@@ -375,7 +379,9 @@ class _StatTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: color, size: 26),
+
             const Gap(10),
+
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

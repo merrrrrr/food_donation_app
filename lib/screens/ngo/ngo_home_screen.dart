@@ -132,7 +132,9 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+
               const Gap(12),
+
               Row(
                 children: [
                   Expanded(
@@ -143,7 +145,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       color: colorScheme.primary,
                     ),
                   ),
-                  const Gap(10),
+
                   Expanded(
                     child: _StatCard(
                       label: 'Expiring Soon',
@@ -154,7 +156,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                   ),
                 ],
               ),
-              const Gap(10),
+
               Row(
                 children: [
                   Expanded(
@@ -165,7 +167,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       color: AppTheme.statusCompleted,
                     ),
                   ),
-                  const Gap(10),
+
                   Expanded(
                     child: _StatCard(
                       label: 'Vegetarian',
@@ -176,6 +178,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                   ),
                 ],
               ),
+
               const Gap(24),
 
               // ── Urgency preview ───────────────────────────────────────────

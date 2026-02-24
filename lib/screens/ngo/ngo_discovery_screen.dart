@@ -84,10 +84,10 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
             child: SegmentedButton<bool>(
               style: SegmentedButton.styleFrom(
                 visualDensity: VisualDensity.compact,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
                 selectedForegroundColor: Theme.of(
                   context,
-                ).colorScheme.onPrimary,
+                ).colorScheme.onSurface,
               ),
               segments: const [
                 ButtonSegment(
