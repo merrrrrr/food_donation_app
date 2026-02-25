@@ -117,13 +117,24 @@ class _DonationList extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: donations.length,
-      itemBuilder: (_, i) => _DonationCard(
-        donation: donations[i],
-        showCancelButton: showCancelButton,
-        showResultButton: showResultButton,
+    return RefreshIndicator(
+      onRefresh: () async {
+        final uid = context.read<AuthProvider>().currentUser?.uid;
+        if (uid != null) {
+          context.read<DonationProvider>().loadDonorDonations(uid);
+          // Small delay to ensure the spinner is visible to the user
+          await Future.delayed(const Duration(milliseconds: 600));
+        }
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: donations.length,
+        itemBuilder: (_, i) => _DonationCard(
+          donation: donations[i],
+          showCancelButton: showCancelButton,
+          showResultButton: showResultButton,
+        ),
       ),
     );
   }
@@ -187,8 +198,10 @@ class _DonationCard extends StatelessWidget {
 
             // ── Details ───────────────────────────────────────────────────
             _InfoRow(
-              icon: Icons.category_outlined,
-              label: donation.foodType.displayLabel,
+              icon: Icons.label_outline,
+              label:
+                  '${donation.sourceStatus} · ${donation.dietaryBase}'
+                  '${donation.contains.isNotEmpty ? '\n${donation.contains.join(', ')}' : ''}',
             ),
             _InfoRow(
               icon: Icons.production_quantity_limits_outlined,

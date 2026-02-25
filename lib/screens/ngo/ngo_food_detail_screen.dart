@@ -45,21 +45,31 @@ class NgoFoodDetailScreen extends StatelessWidget {
             children: [
               // ── Food photo ────────────────────────────────────────────────
               if (donation.photoUrl != null)
-                ClipRRect(
-                  borderRadius: AppTheme.radiusMd,
-                  child: CachedNetworkImage(
-                    imageUrl: donation.photoUrl!,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => const SizedBox(
-                      height: 200,
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (_, __, ___) => Container(
-                      height: 200,
-                      color: colorScheme.surfaceContainerHighest,
-                      child: const Center(
-                        child: Icon(Icons.broken_image_outlined, size: 40),
+                ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: 200),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: AppTheme.radiusMd,
+                      child: CachedNetworkImage(
+                        imageUrl: donation.photoUrl!,
+                        fit: BoxFit.contain,
+                        placeholder: (_, __) => Container(
+                          constraints: const BoxConstraints(minHeight: 150),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3,
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          constraints: const BoxConstraints(minHeight: 150),
+                          color: colorScheme.surfaceContainerHighest,
+                          child: const Center(
+                            child: Icon(Icons.broken_image_outlined, size: 40),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -125,9 +135,11 @@ class NgoFoodDetailScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _DetailRow(
-                        icon: Icons.category_outlined,
-                        label: 'Food Type',
-                        value: donation.foodType.displayLabel,
+                        icon: Icons.label_outline,
+                        label: 'Dietary Profile',
+                        value:
+                            '${donation.sourceStatus}\n${donation.dietaryBase}'
+                            '${donation.contains.isNotEmpty ? '\n${donation.contains.join(', ')}' : ''}',
                       ),
                       _DetailRow(
                         icon: Icons.production_quantity_limits_outlined,

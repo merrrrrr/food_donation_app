@@ -54,7 +54,7 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
         infoWindow: InfoWindow(
           title: d.foodName,
           snippet:
-              '${d.foodType.displayLabel} · ${d.quantity}\n'
+              '${d.sourceStatus} · ${d.dietaryBase} · ${d.quantity}\n'
               '${d.address ?? 'No address'} · Expires: ${DateFormat('dd MMM, hh:mm a').format(d.expiryDate)}',
           onTap: () => Navigator.of(
             context,
@@ -170,10 +170,17 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: donations.length,
-      itemBuilder: (_, i) => _DonationListCard(donation: donations[i]),
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<DonationProvider>().loadAvailableDonations();
+        await Future.delayed(const Duration(milliseconds: 600));
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: donations.length,
+        itemBuilder: (_, i) => _DonationListCard(donation: donations[i]),
+      ),
     );
   }
 }
@@ -231,7 +238,7 @@ class _DonationListCard extends StatelessWidget {
                     ),
                     const Gap(4),
                     Text(
-                      '${donation.foodType.displayLabel} · ${donation.quantity}',
+                      '${donation.sourceStatus} · ${donation.dietaryBase} · ${donation.quantity}',
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.65),
                       ),

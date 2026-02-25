@@ -8,6 +8,7 @@ import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 import 'package:food_donation_app/widgets/custom_text_field.dart';
+import 'package:food_donation_app/widgets/dietary_selection_widget.dart';
 import 'package:food_donation_app/widgets/primary_button.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,14 +21,18 @@ import 'package:food_donation_app/widgets/primary_button.dart';
 /// Lightweight data carrier passed from Step 1 → Step 2.
 class FoodDraft {
   final String foodName;
-  final FoodType foodType;
+  final String sourceStatus;
+  final String dietaryBase;
+  final List<String> contains;
   final String quantity;
   final StorageType storageType;
   final XFile? photo;
 
   const FoodDraft({
     required this.foodName,
-    required this.foodType,
+    required this.sourceStatus,
+    required this.dietaryBase,
+    required this.contains,
     required this.quantity,
     required this.storageType,
     this.photo,
@@ -49,7 +54,9 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
   final _quantityCtrl = TextEditingController();
 
   // ── State ──────────────────────────────────────────────────────────────────
-  FoodType _foodType = FoodType.halal;
+  String? _sourceStatus;
+  String? _dietaryBase;
+  List<String> _contains = [];
   StorageType _storageType = StorageType.roomTemperature;
   XFile? _pickedImage;
 
@@ -98,10 +105,20 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
   // ── Next ───────────────────────────────────────────────────────────────────
   void _onNext() {
     if (!_formKey.currentState!.validate()) return;
+    if (_sourceStatus == null || _dietaryBase == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a Source Status and Dietary Base.'),
+        ),
+      );
+      return;
+    }
 
     final draft = FoodDraft(
       foodName: _foodNameCtrl.text.trim(),
-      foodType: _foodType,
+      sourceStatus: _sourceStatus!,
+      dietaryBase: _dietaryBase!,
+      contains: _contains,
       quantity: _quantityCtrl.text.trim(),
       storageType: _storageType,
       photo: _pickedImage,
@@ -145,22 +162,28 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
               ),
               const Gap(14),
 
-              // ── Food Type ────────────────────────────────────────────────
-              DropdownButtonFormField<FoodType>(
-                value: _foodType,
-                decoration: const InputDecoration(
-                  labelText: 'Food Type',
-                  prefixIcon: Icon(Icons.category_outlined),
+              // ── Dietary Tags ──────────────────────────────────────────────
+              _SectionHeader(title: 'Dietary Tags'),
+              const Gap(4),
+              Text(
+                'Select your food profile. Choosing Vegetarian/Vegan will '
+                'disable Beef & Seafood options.',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
-                items: FoodType.values
-                    .map(
-                      (t) => DropdownMenuItem(
-                        value: t,
-                        child: Text(t.displayLabel),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) => setState(() => _foodType = v!),
+              ),
+              const Gap(14),
+              ThreeTierDietaryWidget(
+                initialSourceStatus: _sourceStatus,
+                initialDietaryBase: _dietaryBase,
+                initialContains: _contains,
+                onSelectionChanged: (source, base, containsVal) {
+                  setState(() {
+                    _sourceStatus = source;
+                    _dietaryBase = base;
+                    _contains = containsVal;
+                  });
+                },
               ),
               const Gap(14),
 

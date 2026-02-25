@@ -63,10 +63,14 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
     final available = donationProv.donations;
     final expiringSoon = available.where((d) => d.isExpiringSoon).length;
     final halalCount = available
-        .where((d) => d.foodType == FoodType.halal)
+        .where((d) => d.sourceStatus == DietarySourceStatus.halal)
         .length;
     final vegCount = available
-        .where((d) => d.foodType == FoodType.vegetarian)
+        .where(
+          (d) =>
+              d.dietaryBase == DietaryBase.vegetarian ||
+              d.dietaryBase == DietaryBase.vegan,
+        )
         .length;
 
     return Scaffold(

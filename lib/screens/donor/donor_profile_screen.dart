@@ -242,14 +242,18 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
+
                     const Gap(4),
+
                     Text(
                       user?.email ?? '—',
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
+
                     const Gap(10),
+
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -271,6 +275,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                   ],
                 ),
               ),
+
               const Gap(24),
 
               // ── Stats ─────────────────────────────────────────────────────
@@ -284,7 +289,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                       color: colorScheme.primary,
                     ),
                   ),
-                  const Gap(10),
+
                   Expanded(
                     child: _StatTile(
                       label: 'Completed',

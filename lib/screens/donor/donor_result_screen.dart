@@ -18,7 +18,8 @@ class DonorResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Retrieve donation passed via Navigator arguments
-    final donation = ModalRoute.of(context)!.settings.arguments as DonationModel;
+    final donation =
+        ModalRoute.of(context)!.settings.arguments as DonationModel;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final fmt = DateFormat('dd MMM yyyy, hh:mm a');
@@ -72,8 +73,9 @@ class DonorResultScreen extends StatelessWidget {
             // ── Donation summary card ─────────────────────────────────────
             Text(
               'Donation Summary',
-              style: textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const Gap(12),
 
@@ -83,7 +85,12 @@ class DonorResultScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _ResultRow(label: 'Food', value: donation.foodName),
-                    _ResultRow(label: 'Type', value: donation.foodType.displayLabel),
+                    _ResultRow(
+                      label: 'Profile',
+                      value:
+                          '${donation.sourceStatus}\n${donation.dietaryBase}'
+                          '${donation.contains.isNotEmpty ? '\n${donation.contains.join(', ')}' : ''}',
+                    ),
                     _ResultRow(label: 'Quantity', value: donation.quantity),
                     _ResultRow(
                       label: 'Expiry',
@@ -107,22 +114,29 @@ class DonorResultScreen extends StatelessWidget {
             if (donation.evidencePhotoUrl != null) ...[
               Text(
                 'Handover Evidence',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Gap(12),
-              ClipRRect(
-                borderRadius: AppTheme.radiusMd,
-                child: CachedNetworkImage(
-                  imageUrl: donation.evidencePhotoUrl!,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) => const SizedBox(
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  errorWidget: (_, __, ___) => const SizedBox(
-                    height: 200,
-                    child: Center(child: Icon(Icons.broken_image_outlined)),
+              ConstrainedBox(
+                constraints: BoxConstraints(minHeight: 200),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ClipRRect(
+                    borderRadius: AppTheme.radiusMd,
+                    child: CachedNetworkImage(
+                      imageUrl: donation.evidencePhotoUrl!,
+                      fit: BoxFit.contain,
+                      placeholder: (_, __) => const SizedBox(
+                        height: 200,
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (_, __, ___) => const SizedBox(
+                        height: 200,
+                        child: Center(child: Icon(Icons.broken_image_outlined)),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -165,15 +179,15 @@ class _ResultRow extends StatelessWidget {
             width: 90,
             child: Text(
               label,
-              style: textTheme.bodySmall
-                  ?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.5)),
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: textTheme.bodySmall
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],

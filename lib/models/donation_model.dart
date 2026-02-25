@@ -2,31 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Enum: FoodType
-//  Matches the dropdown options on the Upload form.
+//  Dietary tag constants
+//  Use these string literals everywhere — never raw strings.
 // ─────────────────────────────────────────────────────────────────────────────
-enum FoodType { halal, vegetarian, beef }
+abstract final class DietarySourceStatus {
+  static const String halal = 'Halal Certified';
+  static const String porkFree = 'Pork-Free / Muslim-Friendly';
+  static const String nonHalal = 'Non-Halal';
 
-extension FoodTypeExtension on FoodType {
-  String toJson() => name; // 'halal' | 'vegetarian' | 'beef'
+  static const List<String> all = [halal, porkFree, nonHalal];
+}
 
-  String get displayLabel {
-    switch (this) {
-      case FoodType.halal:
-        return 'Halal';
-      case FoodType.vegetarian:
-        return 'Vegetarian';
-      case FoodType.beef:
-        return 'Beef';
-    }
-  }
+abstract final class DietaryBase {
+  static const String nonVeg = 'Non-Vegetarian';
+  static const String vegetarian = 'Vegetarian';
+  static const String vegan = 'Vegan';
 
-  static FoodType fromJson(String value) {
-    return FoodType.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => throw ArgumentError('Unknown FoodType: $value'),
-    );
-  }
+  static const List<String> all = [nonVeg, vegetarian, vegan];
+}
+
+abstract final class DietaryContains {
+  static const String beef = 'Contains Beef';
+  static const String seafood = 'Contains Seafood';
+  static const String nuts = 'Contains Nuts';
+  static const String dairyEgg = 'Contains Dairy / Egg';
+
+  static const List<String> all = [beef, seafood, nuts, dairyEgg];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ extension DonationStatusExtension on DonationStatus {
 //  donorId         – UID of the donor who created this listing
 //  donorName       – Denormalised display name (avoids extra reads on the map)
 //  foodName        – e.g. "Nasi Lemak", "Biryani Rice"
-//  foodType        – Enum: halal | vegetarian | beef
+//  dietaryTags     – Multi-select tags, e.g. ['Halal', 'No Pork']
 //  quantity        – Human-readable quantity, e.g. "10 pax", "3 kg"
 //  expiryDate      – Date/time after which the food should not be consumed
 //  pickupTime      – Preferred pickup window set by the donor
@@ -124,7 +125,9 @@ class DonationModel extends Equatable {
 
   // ── Food details (from Upload form) ──────────────────────────────────────
   final String foodName;
-  final FoodType foodType;
+  final String sourceStatus;
+  final String dietaryBase;
+  final List<String> contains;
   final String quantity;
   final DateTime expiryDate;
 
@@ -156,7 +159,9 @@ class DonationModel extends Equatable {
     required this.donorId,
     required this.donorName,
     required this.foodName,
-    required this.foodType,
+    required this.sourceStatus,
+    required this.dietaryBase,
+    required this.contains,
     required this.quantity,
     required this.expiryDate,
     required this.pickupStart,
@@ -184,7 +189,10 @@ class DonationModel extends Equatable {
       donorId: data['donorId'] as String,
       donorName: data['donorName'] as String,
       foodName: data['foodName'] as String,
-      foodType: FoodTypeExtension.fromJson(data['foodType'] as String),
+      sourceStatus:
+          data['sourceStatus'] as String? ?? DietarySourceStatus.porkFree,
+      dietaryBase: data['dietaryBase'] as String? ?? DietaryBase.nonVeg,
+      contains: List<String>.from((data['contains'] as List<dynamic>? ?? [])),
       quantity: data['quantity'] as String,
       expiryDate: (data['expiryDate'] as Timestamp).toDate(),
       pickupStart: (data['pickupStart'] as Timestamp).toDate(),
@@ -209,7 +217,9 @@ class DonationModel extends Equatable {
       'donorId': donorId,
       'donorName': donorName,
       'foodName': foodName,
-      'foodType': foodType.toJson(),
+      'sourceStatus': sourceStatus,
+      'dietaryBase': dietaryBase,
+      'contains': contains,
       'quantity': quantity,
       'expiryDate': Timestamp.fromDate(expiryDate),
       'pickupStart': Timestamp.fromDate(pickupStart),
@@ -237,7 +247,9 @@ class DonationModel extends Equatable {
   // ── copyWith ─────────────────────────────────────────────────────────────
   DonationModel copyWith({
     String? foodName,
-    FoodType? foodType,
+    String? sourceStatus,
+    String? dietaryBase,
+    List<String>? contains,
     String? quantity,
     DateTime? expiryDate,
     DateTime? pickupStart,
@@ -257,7 +269,9 @@ class DonationModel extends Equatable {
       donorId: donorId,
       donorName: donorName,
       foodName: foodName ?? this.foodName,
-      foodType: foodType ?? this.foodType,
+      sourceStatus: sourceStatus ?? this.sourceStatus,
+      dietaryBase: dietaryBase ?? this.dietaryBase,
+      contains: contains ?? this.contains,
       quantity: quantity ?? this.quantity,
       expiryDate: expiryDate ?? this.expiryDate,
       pickupStart: pickupStart ?? this.pickupStart,
@@ -293,7 +307,9 @@ class DonationModel extends Equatable {
     id,
     donorId,
     foodName,
-    foodType,
+    sourceStatus,
+    dietaryBase,
+    contains,
     quantity,
     expiryDate,
     pickupStart,
