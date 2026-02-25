@@ -42,13 +42,13 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     // Derived counts from the live stream
-    final pending = donationProv.donations
+    final pending = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.pending)
         .length;
-    final claimed = donationProv.donations
+    final claimed = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.claimed)
         .length;
-    final completed = donationProv.donations
+    final completed = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.completed)
         .length;
 

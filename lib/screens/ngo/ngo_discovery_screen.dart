@@ -68,7 +68,7 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     final donationProv = context.watch<DonationProvider>();
-    final donations = donationProv.donations;
+    final donations = donationProv.availableDonations;
 
     // Rebuild markers whenever the list changes
     if (_showMap) _buildMarkers(donations);

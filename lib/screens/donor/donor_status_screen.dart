@@ -28,13 +28,8 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // Load donations for this donor (may already be loaded from home screen)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final uid = context.read<AuthProvider>().currentUser?.uid;
-      if (uid != null) {
-        context.read<DonationProvider>().loadDonorDonations(uid);
-      }
-    });
+    // Stream is started by ChangeNotifierProxyProvider when session begins.
+    // No manual loadDonorDonations() needed here.
   }
 
   @override
@@ -48,13 +43,13 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
     final donationProv = context.watch<DonationProvider>();
 
     // Split into tabs
-    final pending = donationProv.donations
+    final pending = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.pending)
         .toList();
-    final claimed = donationProv.donations
+    final claimed = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.claimed)
         .toList();
-    final completed = donationProv.donations
+    final completed = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.completed)
         .toList();
 

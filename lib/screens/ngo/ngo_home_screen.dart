@@ -29,9 +29,8 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Load all pending donations for the statistics cards
-      context.read<DonationProvider>().loadAvailableDonations();
-      // Separately stream this NGO's active claims
+      // availableDonations stream is started by the ProxyProvider session.
+      // Separately stream this NGO's active claims for the home card.
       final uid = context.read<AuthProvider>().currentUser?.uid;
       if (uid != null) {
         _claimsSub = DonationService().getNgoDonations(uid).listen((list) {
@@ -60,7 +59,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final available = donationProv.donations;
+    final available = donationProv.availableDonations;
     final expiringSoon = available.where((d) => d.isExpiringSoon).length;
     final halalCount = available
         .where((d) => d.sourceStatus == DietarySourceStatus.halal)

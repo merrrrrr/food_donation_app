@@ -284,7 +284,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                   Expanded(
                     child: _StatTile(
                       label: 'Total Donated',
-                      value: donationProv.donations.length.toString(),
+                      value: donationProv.donorDonations.length.toString(),
                       icon: Icons.volunteer_activism_rounded,
                       color: colorScheme.primary,
                     ),
@@ -293,7 +293,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                   Expanded(
                     child: _StatTile(
                       label: 'Completed',
-                      value: donationProv.donations
+                      value: donationProv.donorDonations
                           .where((d) => d.status == DonationStatus.completed)
                           .length
                           .toString(),
@@ -316,7 +316,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
 
               if (donationProv.isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (donationProv.donations.isEmpty)
+              else if (donationProv.donorDonations.isEmpty)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 32),
@@ -331,9 +331,9 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: donationProv.donations.length,
+                  itemCount: donationProv.donorDonations.length,
                   itemBuilder: (_, i) {
-                    final d = donationProv.donations[i];
+                    final d = donationProv.donorDonations[i];
                     return _HistoryTile(
                       donation: d,
                       onTap: d.status == DonationStatus.completed

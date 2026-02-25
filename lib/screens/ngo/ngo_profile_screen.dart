@@ -178,10 +178,10 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final claimed = donationProv.donations
+    final claimed = donationProv.ngoDonations
         .where((d) => d.status == DonationStatus.claimed)
         .length;
-    final completed = donationProv.donations
+    final completed = donationProv.ngoDonations
         .where((d) => d.status == DonationStatus.completed)
         .length;
 
@@ -318,7 +318,7 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
 
               if (donationProv.isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (donationProv.donations.isEmpty)
+              else if (donationProv.ngoDonations.isEmpty)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 32),
@@ -333,9 +333,9 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: donationProv.donations.length,
+                  itemCount: donationProv.ngoDonations.length,
                   itemBuilder: (_, i) {
-                    final d = donationProv.donations[i];
+                    final d = donationProv.ngoDonations[i];
                     return _HistoryTile(
                       donation: d,
                       onTap: d.status == DonationStatus.claimed

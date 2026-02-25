@@ -42,10 +42,20 @@ class FoodBridgeApp extends StatelessWidget {
         // AuthProvider is created first; other providers may depend on it.
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
 
-        // DonationProvider is independent of AuthProvider at construction time.
-        // Screens call loadDonorDonations / loadAvailableDonations after login.
-        ChangeNotifierProvider<DonationProvider>(
+        // DonationProvider reacts to auth changes: starts/stops Firestore
+        // streams automatically when the user signs in or out.
+        ChangeNotifierProxyProvider<AuthProvider, DonationProvider>(
           create: (_) => DonationProvider(),
+          update: (_, authProv, donationProv) {
+            final dp = donationProv ?? DonationProvider();
+            if (authProv.authState == AuthState.signedIn &&
+                authProv.currentUser != null) {
+              dp.startSessionFor(authProv.currentUser!);
+            } else if (authProv.authState == AuthState.signedOut) {
+              dp.endSession();
+            }
+            return dp;
+          },
         ),
       ],
       child: MaterialApp(

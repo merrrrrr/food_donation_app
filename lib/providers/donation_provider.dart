@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:food_donation_app/models/donation_model.dart';
+import 'package:food_donation_app/models/user_model.dart';
 import 'package:food_donation_app/services/donation_service.dart';
 import 'package:food_donation_app/services/storage_service.dart';
 
@@ -15,54 +16,110 @@ class DonationProvider extends ChangeNotifier {
   final StorageService _storageService;
 
   // ── Public state ──────────────────────────────────────────────────────────
-  List<DonationModel> donations = [];
+  /// Donations for the currently signed-in **donor** (Donor Status screen).
+  List<DonationModel> donorDonations = [];
+
+  /// Donations visible to the signed-in **NGO** (Discovery + NGO Home screen).
+  List<DonationModel> availableDonations = [];
+
+  /// Donations attributed to the signed-in **NGO** (NGO Profile screen).
+  List<DonationModel> ngoDonations = [];
+
   bool isLoading = false;
   double uploadProgress = 0.0;
   String? errorMessage;
 
-  // ── Active stream subscriptions ───────────────────────────────────────────
-  StreamSubscription<List<DonationModel>>? _donationSub;
+  // ── Active stream subscriptions + session tracking ────────────────────────
+  StreamSubscription<List<DonationModel>>? _donorSub;
+  StreamSubscription<List<DonationModel>>? _availableSub;
+  StreamSubscription<List<DonationModel>>? _ngoSub;
+
+  /// UID of the user whose streams are currently active. Guards against
+  /// redundant restarts when AuthProvider calls notifyListeners() for reasons
+  /// unrelated to sign-in (e.g. loading flag, profile update).
+  String? _activeSessionUid;
 
   // ── Constructor ───────────────────────────────────────────────────────────
   DonationProvider({
     DonationService? donationService,
     StorageService? storageService,
-  })  : _donationService = donationService ?? DonationService(),
-        _storageService = storageService ?? StorageService();
+  }) : _donationService = donationService ?? DonationService(),
+       _storageService = storageService ?? StorageService();
 
-  // ── Stream loaders ────────────────────────────────────────────────────────
+  // ── Session lifecycle ────────────────────────────────────────────────────
+  /// Called once when the user signs in. Starts the appropriate Firestore
+  /// streams for the user's role. Screens do NOT need to call load* methods;
+  /// they simply read from [donorDonations], [availableDonations], or
+  /// [ngoDonations] via context.watch<DonationProvider>().
+  void startSessionFor(UserModel user) {
+    // Guard: only restart if a different user (or first login).
+    if (_activeSessionUid == user.uid) return;
+    _activeSessionUid = user.uid;
+    endSession(clearUid: false); // cancel stale streams but keep new uid
+    if (user.role == UserRole.donor) {
+      _donorSub = _donationService.getDonorDonations(user.uid).listen((data) {
+        donorDonations = data;
+        notifyListeners();
+      }, onError: _onStreamError);
+    } else if (user.role == UserRole.ngo) {
+      _availableSub = _donationService.getAvailableDonations().listen((data) {
+        availableDonations = data;
+        notifyListeners();
+      }, onError: _onStreamError);
+      _ngoSub = _donationService.getNgoDonations(user.uid).listen((data) {
+        ngoDonations = data;
+        notifyListeners();
+      }, onError: _onStreamError);
+    }
+  }
 
-  /// Loads real-time donations for a specific donor (Donor's Status tab).
+  /// Cancels all subscriptions and clears cached data. Called on sign-out.
+  void endSession({bool clearUid = true}) {
+    if (clearUid) _activeSessionUid = null;
+    _donorSub?.cancel();
+    _availableSub?.cancel();
+    _ngoSub?.cancel();
+    _donorSub = null;
+    _availableSub = null;
+    _ngoSub = null;
+    donorDonations = [];
+    availableDonations = [];
+    ngoDonations = [];
+    notifyListeners();
+  }
+
+  // ── Manual refresh (pull-to-refresh support) ──────────────────────────────
+  /// Restarts only the donor stream (used by pull-to-refresh on status screen).
   void loadDonorDonations(String donorId) {
-    _cancelExistingSubscription();
-    _donationSub = _donationService
-        .getDonorDonations(donorId)
-        .listen(_onDonationsReceived, onError: _onStreamError);
+    _donorSub?.cancel();
+    _donorSub = _donationService.getDonorDonations(donorId).listen((data) {
+      donorDonations = data;
+      notifyListeners();
+    }, onError: _onStreamError);
   }
 
-  /// Loads real-time available (pending) donations (NGO Discovery screen).
+  /// Restarts only the available stream (used by pull-to-refresh on discovery).
   void loadAvailableDonations() {
-    _cancelExistingSubscription();
-    _donationSub = _donationService
-        .getAvailableDonations()
-        .listen(_onDonationsReceived, onError: _onStreamError);
+    _availableSub?.cancel();
+    _availableSub = _donationService.getAvailableDonations().listen((data) {
+      availableDonations = data;
+      notifyListeners();
+    }, onError: _onStreamError);
   }
 
-  /// Loads real-time claimed/completed donations for an NGO (NGO Profile).
+  /// Restarts only the NGO claimed stream.
   void loadNgoDonations(String ngoId) {
-    _cancelExistingSubscription();
-    _donationSub = _donationService
-        .getNgoDonations(ngoId)
-        .listen(_onDonationsReceived, onError: _onStreamError);
+    _ngoSub?.cancel();
+    _ngoSub = _donationService.getNgoDonations(ngoId).listen((data) {
+      ngoDonations = data;
+      notifyListeners();
+    }, onError: _onStreamError);
   }
 
   // ── Create ────────────────────────────────────────────────────────────────
   /// Creates a new donation.  If [foodImage] is provided it is uploaded to
   /// Storage first and the download URL is stored on the model.
-  Future<bool> createDonation(
-    DonationModel donation, {
-    File? foodImage,
-  }) async {
+  Future<bool> createDonation(DonationModel donation, {File? foodImage}) async {
     _setLoading(true);
     try {
       // We need the ID before uploading so Storage path is predictable.
@@ -166,11 +223,6 @@ class DonationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _onDonationsReceived(List<DonationModel> data) {
-    donations = data;
-    notifyListeners();
-  }
-
   void _onStreamError(Object err) {
     errorMessage = err.toString();
     notifyListeners();
@@ -182,15 +234,11 @@ class DonationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _cancelExistingSubscription() {
-    _donationSub?.cancel();
-    _donationSub = null;
-    donations = [];
-  }
-
   @override
   void dispose() {
-    _donationSub?.cancel();
+    _donorSub?.cancel();
+    _availableSub?.cancel();
+    _ngoSub?.cancel();
     super.dispose();
   }
 }
