@@ -37,16 +37,16 @@ class DonationService {
         // Avoid Firestore composite index requirement by sorting client-side.
         .snapshots()
         .map((snap) {
-      final list = _mapSnapshot(snap);
-      list.sort((a, b) {
-        final aCreated =
-            a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bCreated =
-            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bCreated.compareTo(aCreated); // newest first
-      });
-      return list;
-    });
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) {
+            final aCreated =
+                a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bCreated =
+                b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return bCreated.compareTo(aCreated); // newest first
+          });
+          return list;
+        });
   }
 
   /// Real-time stream of all `pending` donations — used by the NGO discovery
@@ -58,10 +58,10 @@ class DonationService {
         // Avoid Firestore composite index requirement by sorting client-side.
         .snapshots()
         .map((snap) {
-      final list = _mapSnapshot(snap);
-      list.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
-      return list;
-    });
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+          return list;
+        });
   }
 
   /// Real-time stream of a specific NGO's claimed/completed donations.
@@ -71,16 +71,20 @@ class DonationService {
         // Avoid Firestore composite index requirement by sorting client-side.
         .snapshots()
         .map((snap) {
-      final list = _mapSnapshot(snap);
-      list.sort((a, b) {
-        final aUpdated =
-            a.updatedAt ?? a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bUpdated =
-            b.updatedAt ?? b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bUpdated.compareTo(aUpdated); // newest first
-      });
-      return list;
-    });
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) {
+            final aUpdated =
+                a.updatedAt ??
+                a.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            final bUpdated =
+                b.updatedAt ??
+                b.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            return bUpdated.compareTo(aUpdated); // newest first
+          });
+          return list;
+        });
   }
 
   // ── Fetch single ──────────────────────────────────────────────────────────
@@ -142,6 +146,12 @@ class DonationService {
       'status': DonationStatus.cancelled.toJson(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+  /// Updates an existing donation.
+  Future<void> updateDonation(DonationModel donation) async {
+    await _donationsCol.doc(donation.id).update(donation.toDocument());
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

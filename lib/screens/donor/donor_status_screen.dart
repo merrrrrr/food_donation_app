@@ -246,6 +246,14 @@ class _DonationCard extends StatelessWidget {
                 ),
                 onPressed: () => _confirmCancel(context),
               ),
+              const Gap(12),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit Details'),
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed(AppRouter.donorEditDonation, arguments: donation),
+              ),
             ],
             if (showResultButton) ...[
               const Gap(12),

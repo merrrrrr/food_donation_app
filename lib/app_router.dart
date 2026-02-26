@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_donation_app/models/donation_model.dart';
 
 // Screen imports — auth
 import 'package:food_donation_app/screens/auth/wrapper_screen.dart';
@@ -24,6 +25,7 @@ import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_result_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_ai_match_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_history_screen.dart';
+import 'package:food_donation_app/screens/donor/donor_edit_donation_screen.dart';
 
 // Screen imports — Admin
 import 'package:food_donation_app/screens/admin/admin_dashboard_screen.dart';
@@ -50,6 +52,7 @@ abstract final class AppRouter {
   static const String donorResult = '/donor/result';
   static const String donorHistory = '/donor/history';
   static const String donorProfile = '/donor/profile';
+  static const String donorEditDonation = '/donor/edit-donation';
   static const String donorLocationPicker = '/donor/location-picker';
 
   // NGO routes
@@ -81,6 +84,10 @@ abstract final class AppRouter {
       donorProfile => _slide(const DonorProfileScreen(), settings),
       donorLocationPicker => _slide(
         LocationPickerScreen(initialLocation: settings.arguments as LatLng?),
+        settings,
+      ),
+      donorEditDonation => _slide(
+        DonorEditDonationScreen(donation: settings.arguments as DonationModel),
         settings,
       ),
 

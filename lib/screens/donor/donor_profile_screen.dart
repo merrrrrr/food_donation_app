@@ -312,8 +312,8 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
               ),
               const Gap(12),
               OutlinedButton.icon(
-                icon: const Icon(Icons.data_saver_on_outlined, size: 18),
-                label: const Text('Seed 15 KL Donations'),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Refresh Sample Donations'),
                 onPressed: () async {
                   if (user == null) return;
                   try {
