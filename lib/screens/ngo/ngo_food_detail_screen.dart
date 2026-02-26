@@ -291,10 +291,9 @@ class NgoFoodDetailScreen extends StatelessWidget {
     if (!context.mounted) return;
 
     if (success) {
-      // Navigate to result/evidence screen, removing detail from stack
-      Navigator.of(context).pushNamedAndRemoveUntil(
+      // Navigate to result/evidence screen, replacing detail from stack
+      Navigator.of(context).pushReplacementNamed(
         AppRouter.ngoResult,
-        (route) => route.settings.name == AppRouter.ngoHome,
         arguments: donation.copyWith(
           ngoId: auth.currentUser!.uid,
           ngoName: auth.currentUser!.displayName,

@@ -45,9 +45,12 @@ class DonationService {
   Stream<List<DonationModel>> getAvailableDonations() {
     return _donationsCol
         .where('status', isEqualTo: DonationStatus.pending.toJson())
-        .orderBy('expiryDate', descending: false)
         .snapshots()
-        .map(_mapSnapshot);
+        .map((snap) {
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+          return list;
+        });
   }
 
   /// Real-time stream of a specific NGO's claimed/completed donations.
