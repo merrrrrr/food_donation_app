@@ -9,6 +9,7 @@ import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/services/donation_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
+import 'package:food_donation_app/models/discovery_filter.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  NgoHomeScreen (Dashboard)
@@ -146,6 +147,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: available.length,
                       icon: Icons.list_alt_rounded,
                       color: colorScheme.primary,
+                      onTap: () => donationProv.setNgoTab(1),
                     ),
                   ),
 
@@ -155,6 +157,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: expiringSoon,
                       icon: Icons.timer_outlined,
                       color: AppTheme.statusExpiringSoon,
+                      onTap: () => donationProv.setNgoTab(
+                        1,
+                        filter: DiscoveryFilter.expiringSoon(),
+                      ),
                     ),
                   ),
                 ],
@@ -168,6 +174,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: halalCount,
                       icon: Icons.restaurant_rounded,
                       color: AppTheme.statusCompleted,
+                      onTap: () => donationProv.setNgoTab(
+                        1,
+                        filter: DiscoveryFilter.halal(),
+                      ),
                     ),
                   ),
 
@@ -177,6 +187,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: vegCount,
                       icon: Icons.eco_rounded,
                       color: const Color(0xFF558B2F),
+                      onTap: () => donationProv.setNgoTab(
+                        1,
+                        filter: DiscoveryFilter.vegetarian(),
+                      ),
                     ),
                   ),
                 ],
@@ -364,12 +378,14 @@ class _StatCard extends StatelessWidget {
   final int count;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.label,
     required this.count,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
@@ -378,31 +394,35 @@ class _StatCard extends StatelessWidget {
       elevation: 0,
       color: color.withValues(alpha: 0.1),
       shape: const RoundedRectangleBorder(borderRadius: AppTheme.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 26),
-            const Gap(10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppTheme.radiusMd,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 26),
+              const Gap(10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$count',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
                   ),
-                ),
-                Text(
-                  label,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: color),
-                ),
-              ],
-            ),
-          ],
+                  Text(
+                    label,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: color),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

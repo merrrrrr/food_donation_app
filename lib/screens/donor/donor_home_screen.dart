@@ -128,6 +128,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                       count: pending,
                       color: AppTheme.statusPending,
                       icon: Icons.hourglass_empty_rounded,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.donorStatus),
                     ),
                   ),
                   const Gap(10),
@@ -137,6 +140,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                       count: claimed,
                       color: AppTheme.statusClaimed,
                       icon: Icons.local_shipping_outlined,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.donorStatus, arguments: 1),
                     ),
                   ),
                   const Gap(10),
@@ -146,6 +152,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                       count: completed,
                       color: AppTheme.statusCompleted,
                       icon: Icons.check_circle_outline,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.donorHistory),
                     ),
                   ),
                 ],
@@ -232,12 +241,14 @@ class _StatCard extends StatelessWidget {
   final int count;
   final Color color;
   final IconData icon;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.label,
     required this.count,
     required this.color,
     required this.icon,
+    this.onTap,
   });
 
   @override
@@ -246,26 +257,30 @@ class _StatCard extends StatelessWidget {
       elevation: 0,
       color: color.withValues(alpha: 0.1),
       shape: const RoundedRectangleBorder(borderRadius: AppTheme.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 26),
-            const Gap(6),
-            Text(
-              '$count',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppTheme.radiusMd,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 26),
+              const Gap(6),
+              Text(
+                '$count',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-            Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: color),
-            ),
-          ],
+              Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: color),
+              ),
+            ],
+          ),
         ),
       ),
     );

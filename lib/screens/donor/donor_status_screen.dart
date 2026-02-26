@@ -14,7 +14,8 @@ import 'package:food_donation_app/theme/app_theme.dart';
 //  Shows the donor's active (pending / claimed) donations in a filterable list.
 // ─────────────────────────────────────────────────────────────────────────────
 class DonorStatusScreen extends StatefulWidget {
-  const DonorStatusScreen({super.key});
+  final int initialIndex;
+  const DonorStatusScreen({super.key, this.initialIndex = 0});
 
   @override
   State<DonorStatusScreen> createState() => _DonorStatusScreenState();
@@ -27,7 +28,11 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      initialIndex: widget.initialIndex,
+      length: 3,
+      vsync: this,
+    );
     // Stream is started by ChangeNotifierProxyProvider when session begins.
     // No manual loadDonorDonations() needed here.
   }
