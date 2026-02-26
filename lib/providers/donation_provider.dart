@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:food_donation_app/models/donation_model.dart';
+import 'package:food_donation_app/models/discovery_filter.dart';
 import 'package:food_donation_app/models/user_model.dart';
 import 'package:food_donation_app/services/donation_service.dart';
 import 'package:food_donation_app/services/storage_service.dart';
@@ -28,6 +29,26 @@ class DonationProvider extends ChangeNotifier {
   bool isLoading = false;
   double uploadProgress = 0.0;
   String? errorMessage;
+
+  // ── NGO Navigation & Filter State ──────────────────────────────────────────
+  int _ngoSelectedIndex = 0;
+  int get ngoSelectedIndex => _ngoSelectedIndex;
+
+  DiscoveryFilter? _activeFilter;
+  DiscoveryFilter? get activeFilter => _activeFilter;
+
+  void setNgoTab(int index, {DiscoveryFilter? filter}) {
+    _ngoSelectedIndex = index;
+    if (filter != null) {
+      _activeFilter = filter;
+    }
+    notifyListeners();
+  }
+
+  void clearActiveFilter() {
+    _activeFilter = null;
+    notifyListeners();
+  }
 
   // ── Active stream subscriptions + session tracking ────────────────────────
   StreamSubscription<List<DonationModel>>? _donorSub;

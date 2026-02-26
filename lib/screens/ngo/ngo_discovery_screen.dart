@@ -41,6 +41,7 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
   DateTimeRange? _expiryDateRange;
   DateTimeRange? _pickupDateRange;
   String _sortBy = 'expiry_asc'; // 'expiry_asc', 'expiry_desc', 'newest'
+  bool _onlyExpiringSoon = false;
 
   @override
   void initState() {
@@ -91,6 +92,21 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
     // 1. Base list
     var filtered = donationProv.availableDonations;
 
+    // 1.1 Reactive Filter Handling from Provider
+    final activeFilter = donationProv.activeFilter;
+    if (activeFilter != null) {
+      _selectedSourceStatus = activeFilter.sourceStatus;
+      _selectedDietaryBase = activeFilter.dietaryBase;
+      _onlyExpiringSoon = activeFilter.expiringSoon;
+      if (activeFilter.expiringSoon) {
+        _sortBy = 'expiry_asc';
+      }
+      // Clear it from provider once consumed so it doesn't keep overriding user choices
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        donationProv.clearActiveFilter();
+      });
+    }
+
     // 2. Search filtering
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
@@ -107,9 +123,13 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
           .toList();
     }
     if (_selectedDietaryBase != null) {
-      filtered = filtered
-          .where((d) => d.dietaryBase == _selectedDietaryBase)
-          .toList();
+      filtered = filtered.where((d) {
+        if (_selectedDietaryBase == DietaryBase.vegetarian) {
+          return d.dietaryBase == DietaryBase.vegetarian ||
+              d.dietaryBase == DietaryBase.vegan;
+        }
+        return d.dietaryBase == _selectedDietaryBase;
+      }).toList();
     }
     if (_selectedStorageType != null) {
       filtered = filtered
@@ -117,11 +137,16 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
           .toList();
     }
 
-    // 4. Contains logic (Item must have AT LEAST ONE of the selected tags to match)
+    // 4. contains logic (Item must have AT LEAST ONE of the selected tags to match)
     if (_selectedContains.isNotEmpty) {
       filtered = filtered.where((d) {
         return _selectedContains.any((tag) => d.contains.contains(tag));
       }).toList();
+    }
+
+    // 4.1 Expiring soon filter
+    if (_onlyExpiringSoon) {
+      filtered = filtered.where((d) => d.isExpiringSoon).toList();
     }
 
     // 5. Quantity and Location String matching
@@ -279,6 +304,7 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
                 // ── Active Filters chips ───────────────────────────────────────
                 if (_selectedSourceStatus != null ||
                     _selectedDietaryBase != null ||
+                    _onlyExpiringSoon ||
                     _sortBy != 'expiry_asc')
                   Padding(
                     padding: const EdgeInsets.only(
@@ -298,6 +324,13 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
                                   : 'Newest Listed',
                               onClear: () =>
                                   setState(() => _sortBy = 'expiry_asc'),
+                            ),
+
+                          if (_onlyExpiringSoon)
+                            _ActiveFilterChip(
+                              label: 'Expiring Soon',
+                              onClear: () =>
+                                  setState(() => _onlyExpiringSoon = false),
                             ),
 
                           // Quantity & Location
@@ -389,8 +422,9 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
       ),
       builder: (_) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
-            final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+          builder: (modalContext, setModalState) {
+            final bottomPadding = MediaQuery.of(modalContext).viewInsets.bottom;
+            final donationProv = modalContext.read<DonationProvider>();
 
             return Container(
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
@@ -421,7 +455,9 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
                               _expiryDateRange = null;
                               _pickupDateRange = null;
                               _sortBy = 'expiry_asc';
+                              _onlyExpiringSoon = false;
                             });
+                            donationProv.clearActiveFilter();
                             setState(() {});
                           },
                           child: const Text('Clear All'),

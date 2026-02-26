@@ -9,6 +9,7 @@ import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/services/donation_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
+import 'package:food_donation_app/models/discovery_filter.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  NgoHomeScreen (Dashboard)
@@ -146,9 +147,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: available.length,
                       icon: Icons.list_alt_rounded,
                       color: colorScheme.primary,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRouter.ngoDiscovery),
+                      onTap: () => donationProv.setNgoTab(1),
                     ),
                   ),
 
@@ -158,9 +157,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: expiringSoon,
                       icon: Icons.timer_outlined,
                       color: AppTheme.statusExpiringSoon,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRouter.ngoDiscovery),
+                      onTap: () => donationProv.setNgoTab(
+                        1,
+                        filter: DiscoveryFilter.expiringSoon(),
+                      ),
                     ),
                   ),
                 ],
@@ -174,9 +174,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: halalCount,
                       icon: Icons.restaurant_rounded,
                       color: AppTheme.statusCompleted,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRouter.ngoDiscovery),
+                      onTap: () => donationProv.setNgoTab(
+                        1,
+                        filter: DiscoveryFilter.halal(),
+                      ),
                     ),
                   ),
 
@@ -186,9 +187,10 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                       count: vegCount,
                       icon: Icons.eco_rounded,
                       color: const Color(0xFF558B2F),
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRouter.ngoDiscovery),
+                      onTap: () => donationProv.setNgoTab(
+                        1,
+                        filter: DiscoveryFilter.vegetarian(),
+                      ),
                     ),
                   ),
                 ],

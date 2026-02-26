@@ -775,7 +775,7 @@ class _NeedsForm extends StatelessWidget {
 
               // Dietary preference
               DropdownButtonFormField<String>(
-                initialValue: selectedDietary,
+                value: selectedDietary,
                 decoration: const InputDecoration(
                   labelText: 'Dietary preference',
                   prefixIcon: Icon(Icons.favorite_border_rounded),
