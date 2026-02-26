@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
@@ -154,11 +154,157 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Find the latest version of this donation in the provider's list
-    final donation = donationProv.ngoDonations.firstWhere(
+    // Find the latest version of this donation in the provider's list.
+    // However, if the passed [initialDonation] is already in a terminal state
+    // (completed/cancelled), we prioritize its status to avoid stale cache issues.
+    var donation = donationProv.ngoDonations.firstWhere(
       (d) => d.id == initialDonation.id,
       orElse: () => initialDonation,
     );
+
+    // Safety: If the deep-link/argument says it's completed but the cached list
+    // is lagging behind, trust the argument. Terminal states don't go backwards.
+    if (initialDonation.status == DonationStatus.completed ||
+        initialDonation.status == DonationStatus.cancelled) {
+      if (donation.status != initialDonation.status) {
+        donation = initialDonation;
+      }
+    }
+
+    // ── Completed / Evidence view ──────────────────────────────────────────
+    if (donation.status == DonationStatus.completed) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Completion Evidence')),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.statusCompleted.withValues(alpha: 0.1),
+                  borderRadius: AppTheme.radiusMd,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppTheme.statusCompleted,
+                    ),
+                    const Gap(12),
+                    Expanded(
+                      child: Text(
+                        'This donation was successfully completed.',
+                        style: textTheme.titleSmall?.copyWith(
+                          color: AppTheme.statusCompleted,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Gap(24),
+              Text(
+                'Evidence Photo',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Gap(12),
+              if (donation.evidencePhotoUrl != null)
+                ClipRRect(
+                  borderRadius: AppTheme.radiusMd,
+                  child: CachedNetworkImage(
+                    imageUrl: donation.evidencePhotoUrl!,
+                    fit: BoxFit.fitWidth,
+                    placeholder: (_, __) => Container(
+                      height: 200,
+                      color: colorScheme.surfaceContainerHighest,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: AppTheme.radiusMd,
+                  ),
+                  child: const Center(
+                    child: Text('No evidence photo available.'),
+                  ),
+                ),
+              const Gap(32),
+              Text(
+                'Donation Summary',
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Gap(8),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _SummaryRow(label: 'Food', value: donation.foodName),
+                      _SummaryRow(label: 'Quantity', value: donation.quantity),
+                      _SummaryRow(
+                        label: 'Completed at',
+                        value: donation.updatedAt != null
+                            ? DateFormat(
+                                'dd MMM yyyy, hh:mm a',
+                              ).format(donation.updatedAt!)
+                            : '—',
+                      ),
+                      _SummaryRow(
+                        label: 'Donor',
+                        value: donation.donorName,
+                        isLast: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Gap(40),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ── Cancelled view ────────────────────────────────────────────────────
+    if (donation.status == DonationStatus.cancelled) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Donation Cancelled')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cancel_outlined, size: 72, color: Colors.grey),
+                const Gap(24),
+                Text(
+                  'This listing was cancelled by the donor.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.headlineSmall?.copyWith(color: Colors.grey),
+                ),
+                const Gap(32),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     // ── Success view ──────────────────────────────────────────────────────
     if (_submitted) {

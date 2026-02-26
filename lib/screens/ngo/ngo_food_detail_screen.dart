@@ -239,6 +239,7 @@ class NgoFoodDetailScreen extends StatelessWidget {
               const Gap(32),
 
               // ── Claim button ──────────────────────────────────────────────
+              // ── CTA Buttons ──────────────────────────────────────────────
               if (donation.status == DonationStatus.pending)
                 PrimaryButton(
                   label: 'Claim This Donation',
@@ -246,27 +247,69 @@ class NgoFoodDetailScreen extends StatelessWidget {
                   leadingIcon: Icons.volunteer_activism_rounded,
                   onPressed: () => _onClaim(context, donation),
                 )
+              else if (donation.status == DonationStatus.claimed ||
+                  donation.status == DonationStatus.pickedUp)
+                PrimaryButton(
+                  label: 'Go to Handover Flow',
+                  leadingIcon: Icons.local_shipping_outlined,
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pushNamed(AppRouter.ngoResult, arguments: donation),
+                )
+              else if (donation.status == DonationStatus.completed)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.statusCompleted.withValues(alpha: 0.1),
+                        borderRadius: AppTheme.radiusMd,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: AppTheme.statusCompleted,
+                          ),
+                          const Gap(10),
+                          Text(
+                            'Donation Completed',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.statusCompleted,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Gap(12),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.ngoResult, arguments: donation),
+                      icon: const Icon(Icons.image_search_rounded),
+                      label: const Text('View Completion Evidence'),
+                    ),
+                  ],
+                )
               else
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppTheme.statusCompleted.withValues(alpha: 0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     borderRadius: AppTheme.radiusMd,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.check_circle_outline,
-                        color: AppTheme.statusCompleted,
-                      ),
+                      const Icon(Icons.cancel_outlined, color: Colors.grey),
                       const Gap(10),
                       Text(
-                        donation.status == DonationStatus.completed
-                            ? 'Donation Completed'
-                            : 'You have claimed this donation',
+                        'Donation Cancelled',
                         style: textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.statusCompleted,
+                          color: Colors.grey,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

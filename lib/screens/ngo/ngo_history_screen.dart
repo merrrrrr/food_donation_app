@@ -51,11 +51,9 @@ class NgoHistoryScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: _HistoryTile(
                     donation: d,
-                    onTap: d.status == DonationStatus.completed
-                        ? () => Navigator.of(
-                            context,
-                          ).pushNamed(AppRouter.ngoResult, arguments: d)
-                        : null,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pushNamed(AppRouter.ngoFoodDetail, arguments: d),
                   ),
                 );
               },
