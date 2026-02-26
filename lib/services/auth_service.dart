@@ -32,6 +32,7 @@ class AuthService {
     required String displayName,
     required UserRole role,
     String? phone,
+    String? registrationNumber,
   }) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
@@ -47,6 +48,8 @@ class AuthService {
         email: email.trim(),
         role: role,
         phone: phone?.trim() ?? '',
+        isVerified: role == UserRole.ngo ? false : true,
+        registrationNumber: registrationNumber?.trim(),
       );
 
       // Write user profile; include createdAt server timestamp on first write

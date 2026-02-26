@@ -6,7 +6,7 @@ import 'package:equatable/equatable.dart';
 //  Two roles exist in the system. The string values are stored in Firestore
 //  so they must remain stable (avoid renaming without a migration).
 // ─────────────────────────────────────────────────────────────────────────────
-enum UserRole { donor, ngo }
+enum UserRole { donor, ngo, admin }
 
 extension UserRoleExtension on UserRole {
   /// Converts the enum to the lowercase string stored in Firestore.
@@ -45,6 +45,8 @@ class UserModel extends Equatable {
   final String? photoUrl;
   final String phone;
   final String? address;
+  final bool isVerified;
+  final String? registrationNumber;
   final DateTime? createdAt;
 
   const UserModel({
@@ -55,6 +57,8 @@ class UserModel extends Equatable {
     required this.phone,
     this.photoUrl,
     this.address,
+    this.isVerified = true, // default true for donors/legacy users
+    this.registrationNumber,
     this.createdAt,
   });
 
@@ -69,6 +73,8 @@ class UserModel extends Equatable {
       photoUrl: data['photoUrl'] as String?,
       phone: data['phone'] as String,
       address: data['address'] as String?,
+      isVerified: data['isVerified'] as bool? ?? true,
+      registrationNumber: data['registrationNumber'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -85,6 +91,8 @@ class UserModel extends Equatable {
       'phone': phone,
       if (photoUrl != null) 'photoUrl': photoUrl,
       if (address != null) 'address': address,
+      'isVerified': isVerified,
+      if (registrationNumber != null) 'registrationNumber': registrationNumber,
       if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -97,6 +105,8 @@ class UserModel extends Equatable {
     String? photoUrl,
     String? phone,
     String? address,
+    bool? isVerified,
+    String? registrationNumber,
   }) {
     return UserModel(
       uid: uid,
@@ -106,6 +116,8 @@ class UserModel extends Equatable {
       phone: phone ?? this.phone,
       photoUrl: photoUrl ?? this.photoUrl,
       address: address ?? this.address,
+      isVerified: isVerified ?? this.isVerified,
+      registrationNumber: registrationNumber ?? this.registrationNumber,
       createdAt: createdAt,
     );
   }
@@ -119,6 +131,8 @@ class UserModel extends Equatable {
     photoUrl,
     phone,
     address,
+    isVerified,
+    registrationNumber,
     createdAt,
   ];
 }

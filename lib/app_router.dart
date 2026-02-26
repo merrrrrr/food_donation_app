@@ -22,6 +22,9 @@ import 'package:food_donation_app/screens/ngo/ngo_main_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_result_screen.dart';
 
+// Screen imports — Admin
+import 'package:food_donation_app/screens/admin/admin_dashboard_screen.dart';
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  AppRouter
 //  Centralises all named routes.  Add new routes here and nowhere else.
@@ -52,6 +55,9 @@ abstract final class AppRouter {
   static const String ngoResult = '/ngo/result';
   static const String ngoProfile = '/ngo/profile';
 
+  // Admin routes
+  static const String adminHome = '/admin/home';
+
   // ── Route generator ───────────────────────────────────────────────────────
   static Route<dynamic> generateRoute(RouteSettings settings) {
     return switch (settings.name) {
@@ -77,6 +83,9 @@ abstract final class AppRouter {
       ngoFoodDetail => _slide(const NgoFoodDetailScreen(), settings),
       ngoResult => _slide(const NgoResultScreen(), settings),
       ngoProfile => _slide(const NgoProfileScreen(), settings),
+
+      // Admin
+      adminHome => _fade(const AdminDashboardScreen(), settings),
 
       // Fallback for unknown routes
       _ => MaterialPageRoute(

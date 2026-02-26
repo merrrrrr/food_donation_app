@@ -26,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  final _regNoCtrl = TextEditingController();
 
   UserRole _selectedRole = UserRole.donor;
 
@@ -36,6 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
+    _regNoCtrl.dispose();
     super.dispose();
   }
 
@@ -50,6 +52,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       displayName: _nameCtrl.text,
       phone: _phoneCtrl.text,
       role: _selectedRole,
+      registrationNumber: _selectedRole == UserRole.ngo
+          ? _regNoCtrl.text
+          : null,
     );
 
     if (!mounted) return;
@@ -177,6 +182,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const Gap(16),
+
+                  // ── Registration Number (NGOs only) ───────────────────────
+                  if (_selectedRole == UserRole.ngo) ...[
+                    CustomTextField(
+                      controller: _regNoCtrl,
+                      label: 'ROC / ROS Registration Number',
+                      hint: 'e.g. PPM-001-10-01012024',
+                      prefixIcon: Icons.badge_outlined,
+                      onFieldSubmitted: (_) => _onRegister(),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Registration number is required for NGOs.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const Gap(16),
+                  ],
 
                   // ── Email ─────────────────────────────────────────────────
                   CustomTextField(
