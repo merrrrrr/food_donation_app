@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
@@ -98,13 +100,65 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
     }
   }
 
+  Future<void> _onCancelClaim(DonationModel donation) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Claim?'),
+        content: const Text(
+          'Are you sure you want to release this donation? '
+          'It will become available for other NGOs to claim.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('No, Keep It'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+            ),
+            child: const Text('Yes, Cancel Claim'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await context.read<DonationProvider>().cancelClaim(
+      donation.id,
+    );
+
+    if (success && mounted) {
+      Navigator.pop(context);
+    } else if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<DonationProvider>().errorMessage ??
+                'Cancellation failed.',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final donation =
+    final initialDonation =
         ModalRoute.of(context)!.settings.arguments as DonationModel;
     final donationProv = context.watch<DonationProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    // Find the latest version of this donation in the provider's list
+    final donation = donationProv.ngoDonations.firstWhere(
+      (d) => d.id == initialDonation.id,
+      orElse: () => initialDonation,
+    );
 
     // ── Success view ──────────────────────────────────────────────────────
     if (_submitted) {
@@ -152,9 +206,145 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
       );
     }
 
+    // ── Waiting for donor view ──────────────────────────────────────────────
+    if (donation.status == DonationStatus.claimed) {
+      final timeFmt = DateFormat('hh:mm a');
+      final scheduledStr = donation.scheduledPickupTime != null
+          ? timeFmt.format(donation.scheduledPickupTime!)
+          : '—';
+
+      return Scaffold(
+        appBar: AppBar(title: const Text('Handover Process')),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Icon(
+                Icons.hourglass_empty_rounded,
+                size: 72,
+                color: AppTheme.statusExpiringSoon,
+              ),
+              const Gap(24),
+              Text(
+                'Waiting for Donor',
+                textAlign: TextAlign.center,
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Gap(12),
+              Text(
+                'Please ask the donor to click "Confirm Handover" on their device to verify the collection of "${donation.foodName}".',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              const Gap(24),
+
+              // ── Arrival Info ──────────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  borderRadius: AppTheme.radiusMd,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const Gap(12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Scheduled Arrival',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            scheduledStr,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Gap(24),
+
+              // ── Donation details ──────────────────────────────────────────
+              Text(
+                'Donation Summary',
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Gap(8),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _SummaryRow(label: 'Food', value: donation.foodName),
+                      _SummaryRow(label: 'Quantity', value: donation.quantity),
+                      _SummaryRow(
+                        label: 'Donor',
+                        value:
+                            '${donation.donorName}\n${donation.donorPhone ?? ''}',
+                      ),
+                      _SummaryRow(
+                        label: 'Location',
+                        value: donation.address ?? 'See map',
+                        isLast: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const Gap(32),
+              if (donation.canCancelClaim) ...[
+                TextButton.icon(
+                  onPressed: () => _onCancelClaim(donation),
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: const Text('Cancel My Claim'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: colorScheme.error,
+                  ),
+                ),
+                const Gap(8),
+              ],
+              const Gap(8),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed(AppRouter.ngoFoodDetail, arguments: donation),
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text('View Full Listing Details'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // ── Evidence upload view ──────────────────────────────────────────────
     return Scaffold(
-      appBar: AppBar(title: const Text('Upload Evidence')),
+      appBar: AppBar(title: const Text('Complete Donation')),
       body: LoadingOverlay(
         isLoading: donationProv.isLoading,
         child: SingleChildScrollView(
@@ -162,7 +352,7 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Claimed banner ────────────────────────────────────────────
+              // ── Verified banner ───────────────────────────────────────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -175,8 +365,8 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.local_shipping_outlined,
-                      color: AppTheme.statusClaimed,
+                      Icons.verified_user_outlined,
+                      color: AppTheme.statusCompleted,
                     ),
                     const Gap(12),
                     Expanded(
@@ -184,16 +374,16 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Donation Claimed!',
+                            'Collection Verified!',
                             style: textTheme.titleSmall?.copyWith(
-                              color: AppTheme.statusClaimed,
+                              color: AppTheme.statusCompleted,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            donation.foodName,
+                            'The donor has confirmed the handover.',
                             style: textTheme.bodySmall?.copyWith(
-                              color: AppTheme.statusClaimed.withValues(
+                              color: colorScheme.onSurface.withValues(
                                 alpha: 0.8,
                               ),
                             ),
@@ -208,15 +398,15 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
 
               // ── Instructions ──────────────────────────────────────────────
               Text(
-                'Upload Evidence Photo',
+                'Upload Collection Photo',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const Gap(8),
               Text(
-                'Take a photo of the collected food to confirm the handover. '
-                'This photo will be shared with the donor.',
+                'Finally, please take a photo of the food you have collected. '
+                'This serves as evidence that the handover was completed successfully.',
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.65),
                 ),
@@ -301,16 +491,72 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
               ],
 
               PrimaryButton(
-                label: 'Confirm Handover',
+                label: 'Complete Donation',
                 isLoading: donationProv.isLoading,
-                leadingIcon: Icons.check_rounded,
+                leadingIcon: Icons.task_alt_rounded,
                 onPressed: () => _onSubmitEvidence(donation),
+              ),
+              const Gap(12),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed(AppRouter.ngoFoodDetail, arguments: donation),
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text('View Full Listing Details'),
               ),
               const Gap(24),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isLast;
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 70,
+                child: Text(
+                  label,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast) const Divider(height: 1),
+      ],
     );
   }
 }

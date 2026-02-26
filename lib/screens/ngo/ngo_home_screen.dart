@@ -38,7 +38,11 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
           if (mounted) {
             setState(() {
               _myClaims = list
-                  .where((d) => d.status == DonationStatus.claimed)
+                  .where(
+                    (d) =>
+                        d.status == DonationStatus.claimed ||
+                        d.status == DonationStatus.pickedUp,
+                  )
                   .toList();
             });
           }
@@ -281,9 +285,23 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        d.address ?? '${d.quantity} · ${d.donorName}',
+                        d.status == DonationStatus.claimed
+                            ? 'Waiting for donor to verify handover'
+                            : (d.status == DonationStatus.pickedUp
+                                  ? 'Tap to upload handover evidence'
+                                  : (d.address ??
+                                        '${d.quantity} · ${d.donorName}')),
                         style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: d.status == DonationStatus.pickedUp
+                              ? AppTheme.statusCompleted
+                              : (d.status == DonationStatus.claimed
+                                    ? AppTheme.statusExpiringSoon
+                                    : colorScheme.onSurface.withValues(
+                                        alpha: 0.6,
+                                      )),
+                          fontWeight: d.status == DonationStatus.pickedUp
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

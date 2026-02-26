@@ -102,6 +102,7 @@ class _HistoryTile extends StatelessWidget {
   Color _statusColor() => switch (donation.status) {
     DonationStatus.pending => AppTheme.statusPending,
     DonationStatus.claimed => AppTheme.statusClaimed,
+    DonationStatus.pickedUp => AppTheme.statusClaimed,
     DonationStatus.completed => AppTheme.statusCompleted,
     DonationStatus.cancelled => Colors.grey,
   };

@@ -57,15 +57,36 @@ service cloud.firestore {
                     && request.resource.data.donorId == request.auth.uid;
 
       allow update: if
-        // Donor edits their own PENDING listing.
-        (isDonor()
-          && resource.data.donorId == request.auth.uid
-          && resource.data.status == 'pending')
+        // 🟢 Donor Actions:
+        (isDonor() && resource.data.donorId == request.auth.uid && (
+           // Full edit while pending OR transition to pickedUp (Confirm Handover)
+           resource.data.status == 'pending' ||
+           (resource.data.status == 'claimed' && request.resource.data.status == 'pickedUp')
+        ))
         ||
-        // NGO claims or closes out a listing (status transition only).
-        (isNGO()
-          && (request.resource.data.status == 'claimed'
-              || request.resource.data.status == 'completed'));
+        // 🟢 NGO Actions:
+        (isNGO() && (
+           // 1. CLAIM: Transitions from pending to claimed.
+           (resource.data.status == 'pending' && request.resource.data.status == 'claimed') ||
+           
+           // 2. CANCEL OWN CLAIM: Transitions back to pending if they are the current claimant.
+           (resource.data.status == 'claimed' && 
+            request.resource.data.status == 'pending' && 
+            resource.data.ngoId == request.auth.uid) ||
+            
+           // 3. REVERT LATE CLAIM: Any NGO can revert a late listing to pending.
+           (resource.data.status == 'claimed' &&
+            request.resource.data.status == 'pending' &&
+            resource.data.scheduledPickupTime < (request.time - duration.value(1, 'h'))) ||
+
+           // 4. COMPLETE: Process evidence upload.
+           (resource.data.status == 'pickedUp' && 
+            request.resource.data.status == 'completed' && 
+            resource.data.ngoId == request.auth.uid)
+        ))
+        ||
+        // 🟢 Admin override
+        isAdmin();
 
       allow delete: if false;
     }

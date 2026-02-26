@@ -63,10 +63,11 @@ extension StorageTypeExtension on StorageType {
 //
 //  pending   → The donor has uploaded the food; no NGO has claimed it yet.
 //  claimed   → An NGO has claimed the food and is on the way.
-//  completed → The NGO has collected the food and uploaded evidence.
+//  pickedUp  → The NGO has collected the food and the Donor has verified it.
+//  completed → The NGO has finally uploaded the handover evidence photo.
 //  cancelled → The donor cancelled the listing before it was claimed.
 // ─────────────────────────────────────────────────────────────────────────────
-enum DonationStatus { pending, claimed, completed, cancelled }
+enum DonationStatus { pending, claimed, pickedUp, completed, cancelled }
 
 extension DonationStatusExtension on DonationStatus {
   String toJson() => name;
@@ -77,6 +78,8 @@ extension DonationStatusExtension on DonationStatus {
         return 'Pending';
       case DonationStatus.claimed:
         return 'Claimed';
+      case DonationStatus.pickedUp:
+        return 'Picked Up';
       case DonationStatus.completed:
         return 'Completed';
       case DonationStatus.cancelled:
@@ -151,6 +154,8 @@ class DonationModel extends Equatable {
   final String? ngoName;
   final String? ngoPhone;
   final String? evidencePhotoUrl;
+  final DateTime? scheduledPickupTime;
+  final DateTime? claimedAt;
 
   // ── Timestamps ───────────────────────────────────────────────────────────
   final DateTime? createdAt;
@@ -178,6 +183,8 @@ class DonationModel extends Equatable {
     this.ngoName,
     this.ngoPhone,
     this.evidencePhotoUrl,
+    this.scheduledPickupTime,
+    this.claimedAt,
     this.createdAt,
     this.updatedAt,
     this.donorPhone,
@@ -212,6 +219,9 @@ class DonationModel extends Equatable {
       ngoName: data['ngoName'] as String?,
       ngoPhone: data['ngoPhone'] as String?,
       evidencePhotoUrl: data['evidencePhotoUrl'] as String?,
+      scheduledPickupTime: (data['scheduledPickupTime'] as Timestamp?)
+          ?.toDate(),
+      claimedAt: (data['claimedAt'] as Timestamp?)?.toDate(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
     );
@@ -241,6 +251,9 @@ class DonationModel extends Equatable {
       if (ngoName != null) 'ngoName': ngoName,
       if (ngoPhone != null) 'ngoPhone': ngoPhone,
       if (evidencePhotoUrl != null) 'evidencePhotoUrl': evidencePhotoUrl,
+      if (scheduledPickupTime != null)
+        'scheduledPickupTime': Timestamp.fromDate(scheduledPickupTime!),
+      if (claimedAt != null) 'claimedAt': Timestamp.fromDate(claimedAt!),
       // Always emit updatedAt; only add createdAt when first creating
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -272,6 +285,8 @@ class DonationModel extends Equatable {
     String? ngoName,
     String? ngoPhone,
     String? evidencePhotoUrl,
+    DateTime? scheduledPickupTime,
+    DateTime? claimedAt,
     String? donorPhone,
   }) {
     return DonationModel(
@@ -296,6 +311,8 @@ class DonationModel extends Equatable {
       ngoName: ngoName ?? this.ngoName,
       ngoPhone: ngoPhone ?? this.ngoPhone,
       evidencePhotoUrl: evidencePhotoUrl ?? this.evidencePhotoUrl,
+      scheduledPickupTime: scheduledPickupTime ?? this.scheduledPickupTime,
+      claimedAt: claimedAt ?? this.claimedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
       donorPhone: donorPhone ?? this.donorPhone,
@@ -313,6 +330,14 @@ class DonationModel extends Equatable {
 
   /// True if the expiry date has already passed.
   bool get isExpired => DateTime.now().isAfter(expiryDate);
+
+  /// True if the NGO claimed this less than 30 minutes ago.
+  bool get canCancelClaim {
+    if (status != DonationStatus.claimed) return false;
+    final timestamp = claimedAt ?? updatedAt;
+    if (timestamp == null) return false;
+    return DateTime.now().difference(timestamp).inMinutes < 30;
+  }
 
   @override
   List<Object?> get props => [
@@ -336,5 +361,7 @@ class DonationModel extends Equatable {
     status,
     ngoId,
     evidencePhotoUrl,
+    scheduledPickupTime,
+    claimedAt,
   ];
 }

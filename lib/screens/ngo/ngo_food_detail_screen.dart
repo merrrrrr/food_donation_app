@@ -239,12 +239,40 @@ class NgoFoodDetailScreen extends StatelessWidget {
               const Gap(32),
 
               // ── Claim button ──────────────────────────────────────────────
-              PrimaryButton(
-                label: 'Claim This Donation',
-                isLoading: donationProv.isLoading,
-                leadingIcon: Icons.volunteer_activism_rounded,
-                onPressed: () => _onClaim(context, donation),
-              ),
+              if (donation.status == DonationStatus.pending)
+                PrimaryButton(
+                  label: 'Claim This Donation',
+                  isLoading: donationProv.isLoading,
+                  leadingIcon: Icons.volunteer_activism_rounded,
+                  onPressed: () => _onClaim(context, donation),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.statusCompleted.withValues(alpha: 0.1),
+                    borderRadius: AppTheme.radiusMd,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        color: AppTheme.statusCompleted,
+                      ),
+                      const Gap(10),
+                      Text(
+                        donation.status == DonationStatus.completed
+                            ? 'Donation Completed'
+                            : 'You have claimed this donation',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.statusCompleted,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const Gap(24),
             ],
           ),
@@ -254,29 +282,84 @@ class NgoFoodDetailScreen extends StatelessWidget {
   }
 
   Future<void> _onClaim(BuildContext context, DonationModel donation) async {
-    // Confirmation dialog
+    // Pickup time selection
+    final now = DateTime.now();
+    TimeOfDay? selectedTime;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Claim Donation?'),
-        content: Text(
-          'You are about to claim "${donation.foodName}" from ${donation.donorName}. '
-          'Please collect it before the expiry time.',
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Claim Donation?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'You are about to claim "${donation.foodName}" from ${donation.donorName}.',
+              ),
+              const Gap(16),
+              const Text(
+                'What is your estimated pickup time?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Gap(8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.access_time),
+                label: Text(
+                  selectedTime == null
+                      ? 'Select Time'
+                      : 'Arrival Around: ${selectedTime!.format(ctx)}',
+                ),
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: ctx,
+                    initialTime: TimeOfDay.fromDateTime(
+                      now.add(const Duration(minutes: 30)),
+                    ),
+                  );
+                  if (picked != null) {
+                    setDialogState(() => selectedTime = picked);
+                  }
+                },
+              ),
+              if (selectedTime != null) ...[
+                const Gap(8),
+                Text(
+                  'Note: If you are late by more than 1 hour, your claim will be automatically reverted.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(ctx).colorScheme.error,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: selectedTime == null
+                  ? null
+                  : () => Navigator.pop(ctx, true),
+              child: const Text('Claim'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Claim'),
-          ),
-        ],
       ),
     );
 
-    if (confirmed != true || !context.mounted) return;
+    if (confirmed != true || selectedTime == null || !context.mounted) return;
+
+    final scheduledDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      selectedTime!.hour,
+      selectedTime!.minute,
+    );
 
     final auth = context.read<AuthProvider>();
     final donationProv = context.read<DonationProvider>();
@@ -286,6 +369,7 @@ class NgoFoodDetailScreen extends StatelessWidget {
       ngoId: auth.currentUser!.uid,
       ngoName: auth.currentUser!.displayName,
       ngoPhone: auth.currentUser!.phone,
+      scheduledPickupTime: scheduledDate,
     );
 
     if (!context.mounted) return;
@@ -299,6 +383,8 @@ class NgoFoodDetailScreen extends StatelessWidget {
           ngoName: auth.currentUser!.displayName,
           ngoPhone: auth.currentUser!.phone,
           status: DonationStatus.claimed,
+          scheduledPickupTime: scheduledDate,
+          claimedAt: DateTime.now(),
         ),
       );
     } else {

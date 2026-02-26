@@ -129,7 +129,10 @@ class DonationProvider extends ChangeNotifier {
   }
 
   /// Restarts only the available stream (used by pull-to-refresh on discovery).
-  void loadAvailableDonations() {
+  void loadAvailableDonations() async {
+    try {
+      await _donationService.revertLateClaims();
+    } catch (_) {}
     _availableSub?.cancel();
     _availableSub = _donationService.getAvailableDonations().listen((data) {
       availableDonations = data;
@@ -222,6 +225,7 @@ class DonationProvider extends ChangeNotifier {
     required String ngoId,
     required String ngoName,
     required String ngoPhone,
+    required DateTime scheduledPickupTime,
   }) async {
     _setLoading(true);
     try {
@@ -230,7 +234,23 @@ class DonationProvider extends ChangeNotifier {
         ngoId: ngoId,
         ngoName: ngoName,
         ngoPhone: ngoPhone,
+        scheduledPickupTime: scheduledPickupTime,
       );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // ── Handover verification ──────────────────────────────────────────────────
+  /// Moves status from [claimed] -> [pickedUp]. Called by the Donor.
+  Future<bool> verifyHandover(String donationId) async {
+    _setLoading(true);
+    try {
+      await _donationService.verifyHandover(donationId);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -278,6 +298,20 @@ class DonationProvider extends ChangeNotifier {
     } catch (e) {
       errorMessage = e.toString();
       notifyListeners();
+      return false;
+    }
+  }
+
+  /// Allows an NGO to cancel their claim within the first 30 minutes.
+  Future<bool> cancelClaim(String donationId) async {
+    _setLoading(true);
+    try {
+      await _donationService.cancelClaim(donationId);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      errorMessage = e.toString();
+      _setLoading(false);
       return false;
     }
   }
