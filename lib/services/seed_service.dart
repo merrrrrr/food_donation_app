@@ -278,9 +278,16 @@ class SeedService {
         dietaryBase: food['base'] as String,
         contains: List<String>.from(food['contains'] as List),
         quantity: food['qty'] as String,
-        expiryDate: now.add(Duration(days: food['days'] as int)),
-        pickupStart: now.add(const Duration(hours: 2)),
-        pickupEnd: now.add(const Duration(hours: 10)),
+        // More varied expiry: 1-5 days out, plus some random hours/minutes
+        expiryDate: now.add(
+          Duration(
+            days: random.nextInt(5) + 1,
+            hours: random.nextInt(24),
+            minutes: random.nextInt(60),
+          ),
+        ),
+        pickupStart: now.add(Duration(hours: random.nextInt(3) + 1)),
+        pickupEnd: now.add(Duration(hours: random.nextInt(8) + 4)),
         storageType: food['storage'] as StorageType,
         latitude: loc['lat'] as double,
         longitude: loc['lng'] as double,

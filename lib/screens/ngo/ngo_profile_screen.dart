@@ -6,7 +6,6 @@ import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
-import 'package:food_donation_app/services/seed_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -283,38 +282,6 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                       ),
                     ),
                     const Gap(12),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.data_saver_on_outlined, size: 18),
-                      label: const Text('Seed 15 KL Donations'),
-                      onPressed: () async {
-                        if (user == null) return;
-                        try {
-                          await SeedService.seedDonations(
-                            donorId: user.uid,
-                            donorName: user.displayName,
-                          );
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Succesfully seeded 15 donations!',
-                                ),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Seeding failed: $e\n(Note: You must be signed in as a Donor to create donations)',
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -400,23 +367,29 @@ class _StatTile extends StatelessWidget {
 
             const Gap(10),
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                Text(
-                  label,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: color),
-                ),
-              ],
+                  Text(
+                    label,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: color),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

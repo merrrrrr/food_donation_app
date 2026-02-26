@@ -221,6 +221,12 @@ class DonationService {
     });
   }
 
+  // ── Update ────────────────────────────────────────────────────────────────
+  /// Updates an existing donation.
+  Future<void> updateDonation(DonationModel donation) async {
+    await _donationsCol.doc(donation.id).update(donation.toDocument());
+  }
+
   // ── Private helpers ───────────────────────────────────────────────────────
   List<DonationModel> _mapSnapshot(QuerySnapshot<Map<String, dynamic>> snap) =>
       snap.docs.map(DonationModel.fromDocument).toList();

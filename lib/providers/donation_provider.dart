@@ -177,6 +177,39 @@ class DonationProvider extends ChangeNotifier {
     }
   }
 
+  // ── Update ────────────────────────────────────────────────────────────────
+  /// Updates an existing donation. If [newImage] is provided, it is uploaded
+  /// to Storage first and the photoUrl is updated.
+  Future<bool> updateDonation(DonationModel donation, {File? newImage}) async {
+    _setLoading(true);
+    try {
+      String? photoUrl = donation.photoUrl;
+      if (newImage != null) {
+        uploadProgress = 0.0;
+        photoUrl = await _storageService.uploadFoodPhoto(
+          newImage,
+          donation.id,
+          onProgress: (p) {
+            uploadProgress = p;
+            notifyListeners();
+          },
+        );
+      }
+
+      final updatedDonation = photoUrl != null
+          ? donation.copyWith(photoUrl: photoUrl)
+          : donation;
+
+      await _donationService.updateDonation(updatedDonation);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
   // ── Claim ─────────────────────────────────────────────────────────────────
   Future<bool> claimDonation({
     required String donationId,
