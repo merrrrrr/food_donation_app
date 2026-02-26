@@ -6,7 +6,6 @@ import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
-import 'package:food_donation_app/services/seed_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -294,9 +293,11 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                       value: donationProv.donorDonations.length.toString(),
                       icon: Icons.volunteer_activism_rounded,
                       color: colorScheme.primary,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.donorHistory, arguments: 0),
                     ),
                   ),
-
                   Expanded(
                     child: _StatTile(
                       label: 'Completed',
@@ -306,36 +307,12 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                           .toString(),
                       icon: Icons.check_circle_outline,
                       color: AppTheme.statusCompleted,
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRouter.donorHistory, arguments: 1),
                     ),
                   ),
                 ],
-              ),
-              const Gap(12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Refresh Sample Donations'),
-                onPressed: () async {
-                  if (user == null) return;
-                  try {
-                    await SeedService.seedDonations(
-                      donorId: user.uid,
-                      donorName: user.displayName,
-                    );
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Succesfully seeded 15 donations!'),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Seeding failed: $e')),
-                      );
-                    }
-                  }
-                },
               ),
               const Gap(24),
 
@@ -371,11 +348,13 @@ class _StatTile extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
   const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
@@ -383,37 +362,39 @@ class _StatTile extends StatelessWidget {
     return Card(
       elevation: 0,
       color: color.withValues(alpha: 0.08),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const Gap(12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppTheme.radiusMd,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const Gap(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold, color: color),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    label,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(color: color),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    Text(
+                      label,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: color),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

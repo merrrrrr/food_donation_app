@@ -83,7 +83,10 @@ abstract final class AppRouter {
         settings,
       ),
       donorResult => _slide(const DonorResultScreen(), settings),
-      donorHistory => _slide(const DonorHistoryScreen(), settings),
+      donorHistory => _slide(
+        DonorHistoryScreen(initialIndex: settings.arguments as int? ?? 0),
+        settings,
+      ),
       donorProfile => _slide(const DonorProfileScreen(), settings),
       donorLocationPicker => _slide(
         LocationPickerScreen(initialLocation: settings.arguments as LatLng?),

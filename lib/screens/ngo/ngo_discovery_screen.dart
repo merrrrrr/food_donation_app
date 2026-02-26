@@ -777,9 +777,22 @@ class _NgoDiscoveryScreenState extends State<NgoDiscoveryScreen> {
                     ),
                     const Gap(32),
 
-                    FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Apply Options'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const Gap(12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Apply Options'),
+                          ),
+                        ),
+                      ],
                     ),
                     const Gap(16),
                   ],
