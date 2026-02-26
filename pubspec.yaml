@@ -43,6 +43,9 @@ dependencies:
   uuid: ^4.5.1                   # RFC-4122 UUID generation for document IDs
   equatable: ^2.0.5              # Value equality for model classes
 
+  # ── AI ─────────────────────────────────────────────────────────────────────
+  google_generative_ai: ^0.4.6   # Gemini 2.0 Flash for AI food matching
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

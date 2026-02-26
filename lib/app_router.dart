@@ -21,6 +21,7 @@ import 'package:food_donation_app/screens/ngo/ngo_food_detail_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_main_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_result_screen.dart';
+import 'package:food_donation_app/screens/ngo/ngo_ai_match_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AppRouter
@@ -51,6 +52,7 @@ abstract final class AppRouter {
   static const String ngoFoodDetail = '/ngo/food-detail';
   static const String ngoResult = '/ngo/result';
   static const String ngoProfile = '/ngo/profile';
+  static const String ngoAiMatch = '/ngo/ai-match';
 
   // ── Route generator ───────────────────────────────────────────────────────
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -77,6 +79,7 @@ abstract final class AppRouter {
       ngoFoodDetail => _slide(const NgoFoodDetailScreen(), settings),
       ngoResult => _slide(const NgoResultScreen(), settings),
       ngoProfile => _slide(const NgoProfileScreen(), settings),
+      ngoAiMatch => _slide(const NgoAiMatchScreen(), settings),
 
       // Fallback for unknown routes
       _ => MaterialPageRoute(
