@@ -171,8 +171,16 @@ class NgoFoodDetailScreen extends StatelessWidget {
                         icon: Icons.person_outline,
                         label: 'Donor',
                         value: donation.donorName,
-                        isLast: true,
                       ),
+                      if (donation.donorPhone != null)
+                        _DetailRow(
+                          icon: Icons.phone_outlined,
+                          label: 'Contact',
+                          value: donation.donorPhone!,
+                          isLast: true,
+                        )
+                      else
+                        const SizedBox.shrink(),
                     ],
                   ),
                 ),
@@ -277,6 +285,7 @@ class NgoFoodDetailScreen extends StatelessWidget {
       donationId: donation.id,
       ngoId: auth.currentUser!.uid,
       ngoName: auth.currentUser!.displayName,
+      ngoPhone: auth.currentUser!.phone,
     );
 
     if (!context.mounted) return;
@@ -289,6 +298,7 @@ class NgoFoodDetailScreen extends StatelessWidget {
         arguments: donation.copyWith(
           ngoId: auth.currentUser!.uid,
           ngoName: auth.currentUser!.displayName,
+          ngoPhone: auth.currentUser!.phone,
           status: DonationStatus.claimed,
         ),
       );

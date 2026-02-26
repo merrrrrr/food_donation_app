@@ -43,7 +43,7 @@ class UserModel extends Equatable {
   final String email;
   final UserRole role;
   final String? photoUrl;
-  final String? phone;
+  final String phone;
   final String? address;
   final DateTime? createdAt;
 
@@ -52,8 +52,8 @@ class UserModel extends Equatable {
     required this.displayName,
     required this.email,
     required this.role,
+    required this.phone,
     this.photoUrl,
-    this.phone,
     this.address,
     this.createdAt,
   });
@@ -67,7 +67,7 @@ class UserModel extends Equatable {
       email: data['email'] as String,
       role: UserRoleExtension.fromJson(data['role'] as String),
       photoUrl: data['photoUrl'] as String?,
-      phone: data['phone'] as String?,
+      phone: data['phone'] as String,
       address: data['address'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
     );
@@ -82,8 +82,8 @@ class UserModel extends Equatable {
       'displayName': displayName,
       'email': email,
       'role': role.toJson(),
+      'phone': phone,
       if (photoUrl != null) 'photoUrl': photoUrl,
-      if (phone != null) 'phone': phone,
       if (address != null) 'address': address,
       if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
     };
@@ -103,14 +103,22 @@ class UserModel extends Equatable {
       displayName: displayName ?? this.displayName,
       email: email ?? this.email,
       role: role ?? this.role,
-      photoUrl: photoUrl ?? this.photoUrl,
       phone: phone ?? this.phone,
+      photoUrl: photoUrl ?? this.photoUrl,
       address: address ?? this.address,
       createdAt: createdAt,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [uid, displayName, email, role, photoUrl, phone, address, createdAt];
+  List<Object?> get props => [
+    uid,
+    displayName,
+    email,
+    role,
+    photoUrl,
+    phone,
+    address,
+    createdAt,
+  ];
 }

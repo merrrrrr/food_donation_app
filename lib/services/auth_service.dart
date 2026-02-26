@@ -31,6 +31,7 @@ class AuthService {
     required String password,
     required String displayName,
     required UserRole role,
+    String? phone,
   }) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
@@ -45,12 +46,11 @@ class AuthService {
         displayName: displayName.trim(),
         email: email.trim(),
         role: role,
+        phone: phone?.trim() ?? '',
       );
 
       // Write user profile; include createdAt server timestamp on first write
-      await _usersCol
-          .doc(uid)
-          .set(newUser.toDocument(includeCreatedAt: true));
+      await _usersCol.doc(uid).set(newUser.toDocument(includeCreatedAt: true));
 
       return newUser;
     } on FirebaseAuthException catch (e) {

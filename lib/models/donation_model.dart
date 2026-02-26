@@ -122,6 +122,7 @@ class DonationModel extends Equatable {
   final String id;
   final String donorId;
   final String donorName;
+  final String? donorPhone;
 
   // ── Food details (from Upload form) ──────────────────────────────────────
   final String foodName;
@@ -148,6 +149,7 @@ class DonationModel extends Equatable {
   final DonationStatus status;
   final String? ngoId;
   final String? ngoName;
+  final String? ngoPhone;
   final String? evidencePhotoUrl;
 
   // ── Timestamps ───────────────────────────────────────────────────────────
@@ -174,9 +176,11 @@ class DonationModel extends Equatable {
     this.status = DonationStatus.pending,
     this.ngoId,
     this.ngoName,
+    this.ngoPhone,
     this.evidencePhotoUrl,
     this.createdAt,
     this.updatedAt,
+    this.donorPhone,
   });
 
   // ── Factory: from a Firestore DocumentSnapshot ──────────────────────────
@@ -188,6 +192,7 @@ class DonationModel extends Equatable {
       id: doc.id,
       donorId: data['donorId'] as String,
       donorName: data['donorName'] as String,
+      donorPhone: data['donorPhone'] as String?,
       foodName: data['foodName'] as String,
       sourceStatus:
           data['sourceStatus'] as String? ?? DietarySourceStatus.porkFree,
@@ -205,6 +210,7 @@ class DonationModel extends Equatable {
       status: DonationStatusExtension.fromJson(data['status'] as String),
       ngoId: data['ngoId'] as String?,
       ngoName: data['ngoName'] as String?,
+      ngoPhone: data['ngoPhone'] as String?,
       evidencePhotoUrl: data['evidencePhotoUrl'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
@@ -216,6 +222,7 @@ class DonationModel extends Equatable {
     return {
       'donorId': donorId,
       'donorName': donorName,
+      if (donorPhone != null) 'donorPhone': donorPhone,
       'foodName': foodName,
       'sourceStatus': sourceStatus,
       'dietaryBase': dietaryBase,
@@ -232,6 +239,7 @@ class DonationModel extends Equatable {
       'status': status.toJson(),
       if (ngoId != null) 'ngoId': ngoId,
       if (ngoName != null) 'ngoName': ngoName,
+      if (ngoPhone != null) 'ngoPhone': ngoPhone,
       if (evidencePhotoUrl != null) 'evidencePhotoUrl': evidencePhotoUrl,
       // Always emit updatedAt; only add createdAt when first creating
       'updatedAt': FieldValue.serverTimestamp(),
@@ -262,7 +270,9 @@ class DonationModel extends Equatable {
     DonationStatus? status,
     String? ngoId,
     String? ngoName,
+    String? ngoPhone,
     String? evidencePhotoUrl,
+    String? donorPhone,
   }) {
     return DonationModel(
       id: id,
@@ -284,9 +294,11 @@ class DonationModel extends Equatable {
       status: status ?? this.status,
       ngoId: ngoId ?? this.ngoId,
       ngoName: ngoName ?? this.ngoName,
+      ngoPhone: ngoPhone ?? this.ngoPhone,
       evidencePhotoUrl: evidencePhotoUrl ?? this.evidencePhotoUrl,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      donorPhone: donorPhone ?? this.donorPhone,
     );
   }
 
@@ -306,6 +318,8 @@ class DonationModel extends Equatable {
   List<Object?> get props => [
     id,
     donorId,
+    donorName,
+    donorPhone,
     foodName,
     sourceStatus,
     dietaryBase,

@@ -74,6 +74,7 @@ class DonationService {
     required String donationId,
     required String ngoId,
     required String ngoName,
+    required String ngoPhone,
   }) async {
     await _db.runTransaction((tx) async {
       final ref = _donationsCol.doc(donationId);
@@ -90,6 +91,7 @@ class DonationService {
         'status': DonationStatus.claimed.toJson(),
         'ngoId': ngoId,
         'ngoName': ngoName,
+        'ngoPhone': ngoPhone,
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
@@ -119,7 +121,6 @@ class DonationService {
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
-  List<DonationModel> _mapSnapshot(
-      QuerySnapshot<Map<String, dynamic>> snap) =>
+  List<DonationModel> _mapSnapshot(QuerySnapshot<Map<String, dynamic>> snap) =>
       snap.docs.map(DonationModel.fromDocument).toList();
 }

@@ -158,6 +158,7 @@ class DonationProvider extends ChangeNotifier {
     required String donationId,
     required String ngoId,
     required String ngoName,
+    required String ngoPhone,
   }) async {
     _setLoading(true);
     try {
@@ -165,6 +166,7 @@ class DonationProvider extends ChangeNotifier {
         donationId: donationId,
         ngoId: ngoId,
         ngoName: ngoName,
+        ngoPhone: ngoPhone,
       );
       _setLoading(false);
       return true;

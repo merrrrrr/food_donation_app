@@ -342,6 +342,7 @@ class _UploadFoodStep2ScreenState extends State<UploadFoodStep2Screen> {
       id: _uuid.v4(),
       donorId: auth.currentUser!.uid,
       donorName: auth.currentUser!.displayName,
+      donorPhone: auth.currentUser!.phone,
       foodName: draft.foodName,
       sourceStatus: draft.sourceStatus,
       dietaryBase: draft.dietaryBase,

@@ -25,8 +25,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
     final user = auth.currentUser;
     if (user == null) return;
     final nameCtrl = TextEditingController(text: user.displayName);
-    final phoneCtrl = TextEditingController(text: user.phone ?? '');
-    final addressCtrl = TextEditingController(text: user.address ?? '');
+    final phoneCtrl = TextEditingController(text: user.phone);
     final formKey = GlobalKey<FormState>();
 
     await showModalBottomSheet<void>(
@@ -73,18 +72,17 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                 const Gap(12),
                 TextFormField(
                   controller: phoneCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone (optional)',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Phone'),
                   keyboardType: TextInputType.phone,
-                ),
-                const Gap(12),
-                TextFormField(
-                  controller: addressCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Address (optional)',
-                  ),
-                  maxLines: 2,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Phone number is required.';
+                    }
+                    if (v.trim().length < 8) {
+                      return 'Enter a valid phone number.';
+                    }
+                    return null;
+                  },
                 ),
                 const Gap(20),
                 FilledButton(
@@ -92,10 +90,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                     if (!formKey.currentState!.validate()) return;
                     final success = await auth.updateProfile(
                       displayName: nameCtrl.text,
-                      phone: phoneCtrl.text.isEmpty ? null : phoneCtrl.text,
-                      address: addressCtrl.text.isEmpty
-                          ? null
-                          : addressCtrl.text,
+                      phone: phoneCtrl.text,
                     );
                     if (!mounted) return;
                     if (!success && auth.errorMessage != null) {
@@ -245,8 +240,20 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
 
                     const Gap(4),
 
+                    const Gap(4),
+
                     Text(
                       user?.email ?? '—',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+
+                    const Gap(4),
+
+                    // Phone Number Display
+                    Text(
+                      user?.phone ?? '—',
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
