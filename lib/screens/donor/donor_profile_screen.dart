@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:food_donation_app/app_router.dart';
@@ -7,6 +11,7 @@ import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
+import 'package:food_donation_app/widgets/loading_overlay.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  DonorProfileScreen
@@ -20,6 +25,53 @@ class DonorProfileScreen extends StatefulWidget {
 }
 
 class _DonorProfileScreenState extends State<DonorProfileScreen> {
+  Future<void> _pickAndUploadPhoto(AuthProvider auth) async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_rounded),
+              title: const Text('Take Photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final image = await picker.pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 75,
+    );
+
+    if (image == null) return;
+
+    final success = await auth.uploadProfilePhoto(File(image.path));
+    if (!mounted) return;
+
+    if (!success && auth.errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+    }
+  }
+
   Future<void> _openEditSheet(AuthProvider auth) async {
     final user = auth.currentUser;
     if (user == null) return;
@@ -191,91 +243,154 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Avatar + name card ────────────────────────────────────────
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: AppTheme.radiusLg,
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary.withValues(alpha: 0.12),
-                      colorScheme.secondary.withValues(alpha: 0.10),
+        body: LoadingOverlay(
+          isLoading: auth.isLoading,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Avatar + name card ────────────────────────────────────────
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: AppTheme.radiusLg,
+                    gradient: LinearGradient(
+                      colors: [
+                        colorScheme.primary.withValues(alpha: 0.12),
+                        colorScheme.secondary.withValues(alpha: 0.10),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 20,
+                  ),
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _pickAndUploadPhoto(auth),
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundColor: colorScheme.primaryContainer,
+                              backgroundImage: user?.photoUrl != null
+                                  ? CachedNetworkImageProvider(user!.photoUrl!)
+                                  : null,
+                              child: user?.photoUrl == null
+                                  ? Text(
+                                      (user?.displayName.isNotEmpty == true)
+                                          ? user!.displayName[0].toUpperCase()
+                                          : '?',
+                                      style: textTheme.headlineMedium?.copyWith(
+                                        color: colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorScheme.surface,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.camera_alt_rounded,
+                                size: 14,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Gap(14),
+                      Text(
+                        user?.displayName ?? '—',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+
+                      const Gap(4),
+
+                      const Gap(4),
+
+                      Text(
+                        user?.email ?? '—',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+
+                      const Gap(4),
+
+                      // Phone Number Display
+                      Text(
+                        user?.phone ?? '—',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+
+                      const Gap(10),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer.withValues(
+                            alpha: 0.7,
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Donor',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 24,
-                  horizontal: 20,
-                ),
-                child: Column(
+
+                const Gap(24),
+
+                // ── Stats ─────────────────────────────────────────────────────
+                Row(
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: colorScheme.primaryContainer,
-                      child: Text(
-                        (user?.displayName.isNotEmpty == true)
-                            ? user!.displayName[0].toUpperCase()
-                            : '?',
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const Gap(14),
-                    Text(
-                      user?.displayName ?? '—',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
+                    Expanded(
+                      child: _StatTile(
+                        label: 'Total Donated',
+                        value: donationProv.donorDonations.length.toString(),
+                        icon: Icons.volunteer_activism_rounded,
+                        color: colorScheme.primary,
                       ),
                     ),
 
-                    const Gap(4),
-
-                    const Gap(4),
-
-                    Text(
-                      user?.email ?? '—',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-
-                    const Gap(4),
-
-                    // Phone Number Display
-                    Text(
-                      user?.phone ?? '—',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-
-                    const Gap(10),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(
-                          alpha: 0.7,
-                        ),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Donor',
-                        style: textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Expanded(
+                      child: _StatTile(
+                        label: 'Completed',
+                        value: donationProv.donorDonations
+                            .where((d) => d.status == DonationStatus.completed)
+                            .length
+                            .toString(),
+                        icon: Icons.check_circle_outline,
+                        color: AppTheme.statusCompleted,
                       ),
                     ),
                   ],
@@ -316,23 +431,24 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
               ),
               const Gap(24),
 
-              const Gap(16),
+                const Gap(16),
 
-              OutlinedButton.icon(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed(AppRouter.donorHistory),
-                icon: const Icon(Icons.history),
-                label: const Text('View Full Donation History'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: colorScheme.primary),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed(AppRouter.donorHistory),
+                  icon: const Icon(Icons.history),
+                  label: const Text('View Full Donation History'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: colorScheme.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-              ),
-              const Gap(24),
-            ],
+                const Gap(24),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:food_donation_app/models/user_model.dart';
 import 'package:food_donation_app/services/auth_service.dart';
+import 'package:food_donation_app/services/storage_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AuthProvider
@@ -17,6 +19,7 @@ enum AuthState { unknown, signedIn, signedOut }
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
+  final StorageService _storageService;
 
   // ── Public state ──────────────────────────────────────────────────────────
   UserModel? currentUser;
@@ -29,8 +32,9 @@ class AuthProvider extends ChangeNotifier {
   StreamSubscription<User?>? _authSub;
 
   // ── Constructor ───────────────────────────────────────────────────────────
-  AuthProvider({AuthService? authService})
-    : _authService = authService ?? AuthService() {
+  AuthProvider({AuthService? authService, StorageService? storageService})
+    : _authService = authService ?? AuthService(),
+      _storageService = storageService ?? StorageService() {
     _init();
   }
 
@@ -126,6 +130,29 @@ class AuthProvider extends ChangeNotifier {
         displayName: displayName,
         phone: phone,
         address: address,
+        photoUrl: photoUrl,
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // ── Upload Profile Photo ────────────────────────────────────────────────
+  Future<bool> uploadProfilePhoto(File imageFile) async {
+    if (currentUser == null) return false;
+
+    _setLoading(true);
+    try {
+      final photoUrl = await _storageService.uploadProfilePhoto(
+        imageFile,
+        currentUser!.uid,
+      );
+      currentUser = await _authService.updateUserProfile(
+        uid: currentUser!.uid,
         photoUrl: photoUrl,
       );
       _setLoading(false);
