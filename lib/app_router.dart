@@ -22,6 +22,7 @@ import 'package:food_donation_app/screens/ngo/ngo_food_detail_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_main_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_result_screen.dart';
+import 'package:food_donation_app/screens/ngo/ngo_ai_match_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_history_screen.dart';
 
 // Screen imports — Admin
@@ -58,6 +59,7 @@ abstract final class AppRouter {
   static const String ngoResult = '/ngo/result';
   static const String ngoHistory = '/ngo/history';
   static const String ngoProfile = '/ngo/profile';
+  static const String ngoAiMatch = '/ngo/ai-match';
 
   // Admin routes
   static const String adminHome = '/admin/home';
@@ -92,6 +94,7 @@ abstract final class AppRouter {
       ngoResult => _slide(const NgoResultScreen(), settings),
       ngoHistory => _slide(const NgoHistoryScreen(), settings),
       ngoProfile => _slide(const NgoProfileScreen(), settings),
+      ngoAiMatch => _slide(const NgoAiMatchScreen(), settings),
 
       // Admin
       adminHome => _fade(const AdminDashboardScreen(), settings),

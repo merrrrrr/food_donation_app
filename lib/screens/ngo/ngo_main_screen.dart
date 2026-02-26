@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:food_donation_app/screens/ngo/ngo_home_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_discovery_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
+import 'package:food_donation_app/screens/ngo/ngo_ai_match_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/app_router.dart';
@@ -20,6 +21,7 @@ class _NgoMainScreenState extends State<NgoMainScreen> {
   final List<Widget> _screens = const [
     NgoHomeScreen(),
     NgoDiscoveryScreen(),
+    NgoAiMatchScreen(),
     NgoProfileScreen(),
   ];
 
@@ -101,6 +103,11 @@ class _NgoMainScreenState extends State<NgoMainScreen> {
             icon: Icon(Icons.map_outlined),
             activeIcon: Icon(Icons.map),
             label: 'Discover',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_awesome_outlined),
+            activeIcon: Icon(Icons.auto_awesome),
+            label: 'AI Match',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
