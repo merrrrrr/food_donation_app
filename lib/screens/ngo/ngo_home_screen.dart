@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
@@ -96,15 +97,22 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
                     backgroundColor: colorScheme.primaryContainer.withValues(
                       alpha: 0.8,
                     ),
-                    child: Text(
-                      (auth.currentUser?.displayName.isNotEmpty == true)
-                          ? auth.currentUser!.displayName[0].toUpperCase()
-                          : '?',
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onPrimaryContainer,
-                      ),
-                    ),
+                    backgroundImage: auth.currentUser?.photoUrl != null
+                        ? CachedNetworkImageProvider(
+                            auth.currentUser!.photoUrl!,
+                          )
+                        : null,
+                    child: auth.currentUser?.photoUrl == null
+                        ? Text(
+                            (auth.currentUser?.displayName.isNotEmpty == true)
+                                ? auth.currentUser!.displayName[0].toUpperCase()
+                                : '?',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          )
+                        : null,
                   ),
                   const Gap(12),
                   Expanded(
