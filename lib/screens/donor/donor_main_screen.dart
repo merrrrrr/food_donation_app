@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:food_donation_app/app_router.dart';
+import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/screens/donor/donor_home_screen.dart';
-import 'package:food_donation_app/screens/donor/donor_status_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_profile_screen.dart';
+import 'package:food_donation_app/screens/donor/donor_status_screen.dart';
 
 class DonorMainScreen extends StatefulWidget {
   const DonorMainScreen({super.key});
@@ -12,8 +15,6 @@ class DonorMainScreen extends StatefulWidget {
 }
 
 class _DonorMainScreenState extends State<DonorMainScreen> {
-  int _selectedIndex = 0;
-
   final List<Widget> _screens = const [
     DonorHomeScreen(),
     DonorStatusScreen(),
@@ -22,11 +23,14 @@ class _DonorMainScreenState extends State<DonorMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final donationProv = context.watch<DonationProvider>();
+    final selectedIndex = donationProv.donorSelectedIndex;
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: IndexedStack(index: selectedIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        currentIndex: selectedIndex,
+        onTap: (index) => donationProv.setDonorTab(index),
         selectedFontSize: 12,
         unselectedFontSize: 12,
         type: BottomNavigationBarType.fixed,
@@ -48,9 +52,7 @@ class _DonorMainScreenState extends State<DonorMainScreen> {
           ),
         ],
       ),
-      floatingActionButton:
-          _selectedIndex !=
-              2 // Hide on Profile for cleaner look? No, maybe keep it everywhere.
+      floatingActionButton: selectedIndex != 2
           ? FloatingActionButton.extended(
               onPressed: () =>
                   Navigator.of(context).pushNamed(AppRouter.donorUpload),

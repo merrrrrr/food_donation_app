@@ -61,7 +61,6 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Donations'),
-        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           tabs: [

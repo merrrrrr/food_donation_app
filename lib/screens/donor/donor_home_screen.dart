@@ -128,9 +128,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                       count: pending,
                       color: AppTheme.statusPending,
                       icon: Icons.hourglass_empty_rounded,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRouter.donorStatus),
+                      onTap: () => donationProv.setDonorTab(1),
                     ),
                   ),
                   const Gap(10),
@@ -140,9 +138,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                       count: claimed,
                       color: AppTheme.statusClaimed,
                       icon: Icons.local_shipping_outlined,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRouter.donorStatus, arguments: 1),
+                      onTap: () => donationProv.setDonorTab(1),
                     ),
                   ),
                   const Gap(10),
