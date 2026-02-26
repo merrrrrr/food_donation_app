@@ -10,7 +10,6 @@ import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
-import 'package:food_donation_app/services/seed_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 import 'package:food_donation_app/widgets/loading_overlay.dart';
 
@@ -326,8 +325,6 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
 
                       const Gap(4),
 
-                      const Gap(4),
-
                       Text(
                         user?.email ?? '—',
                         style: textTheme.bodyMedium?.copyWith(
@@ -382,10 +379,9 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                         color: colorScheme.primary,
                         onTap: () => Navigator.of(
                           context,
-                        ).pushNamed(AppRouter.donorHistory),
+                        ).pushNamed(AppRouter.donorHistory, arguments: 0),
                       ),
                     ),
-
                     Expanded(
                       child: _StatTile(
                         label: 'Completed',
@@ -397,41 +393,12 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                         color: AppTheme.statusCompleted,
                         onTap: () => Navigator.of(
                           context,
-                        ).pushNamed(AppRouter.donorHistory),
+                        ).pushNamed(AppRouter.donorHistory, arguments: 1),
                       ),
                     ),
                   ],
                 ),
-                const Gap(12),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Refresh Sample Donations'),
-                  onPressed: () async {
-                    if (user == null) return;
-                    try {
-                      await SeedService.seedDonations(
-                        donorId: user.uid,
-                        donorName: user.displayName,
-                      );
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Succesfully seeded 15 donations!'),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Seeding failed: $e')),
-                        );
-                      }
-                    }
-                  },
-                ),
                 const Gap(24),
-
-                const Gap(16),
 
                 OutlinedButton.icon(
                   onPressed: () =>
@@ -481,7 +448,7 @@ class _StatTile extends StatelessWidget {
       color: color.withValues(alpha: 0.08),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.radiusMd,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

@@ -12,12 +12,14 @@ import 'package:food_donation_app/theme/app_theme.dart';
 //  Shows the donor's past donations, filtered to only completed or cancelled.
 // ─────────────────────────────────────────────────────────────────────────────
 class DonorHistoryScreen extends StatelessWidget {
-  const DonorHistoryScreen({super.key});
+  final int initialIndex;
+  const DonorHistoryScreen({super.key, this.initialIndex = 0});
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      initialIndex: initialIndex,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Donation History'),
@@ -25,6 +27,7 @@ class DonorHistoryScreen extends StatelessWidget {
             isScrollable: true,
             tabAlignment: TabAlignment.center,
             tabs: [
+              Tab(text: 'Total'),
               Tab(text: 'Completed'),
               Tab(text: 'Cancelled'),
             ],
@@ -32,6 +35,7 @@ class DonorHistoryScreen extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
+            _HistoryTabContent(status: null),
             _HistoryTabContent(status: DonationStatus.completed),
             _HistoryTabContent(status: DonationStatus.cancelled),
           ],
@@ -42,27 +46,34 @@ class DonorHistoryScreen extends StatelessWidget {
 }
 
 class _HistoryTabContent extends StatelessWidget {
-  final DonationStatus status;
+  final DonationStatus? status;
   const _HistoryTabContent({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final donationProv = context.watch<DonationProvider>();
 
-    final historyDonations = donationProv.donorDonations
-        .where((d) => d.status == status)
-        .toList();
+    final historyDonations = status == null
+        ? donationProv.donorDonations
+              .where(
+                (d) =>
+                    d.status == DonationStatus.completed ||
+                    d.status == DonationStatus.cancelled,
+              )
+              .toList()
+        : donationProv.donorDonations.where((d) => d.status == status).toList();
 
     if (donationProv.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (historyDonations.isEmpty) {
+      final label = status?.displayLabel.toLowerCase() ?? 'history';
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 32),
           child: Text(
-            "You have no ${status.displayLabel.toLowerCase()} donations.",
+            "You have no $label donations.",
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.black45),
           ),
