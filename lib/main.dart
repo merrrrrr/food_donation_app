@@ -11,6 +11,8 @@ import 'package:food_donation_app/providers/admin_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/models/user_model.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
+import 'package:food_donation_app/services/storage_service.dart';
+import 'package:food_donation_app/services/donation_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Entry point
@@ -41,8 +43,15 @@ class FoodBridgeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // Services required by multiple providers
+        Provider<StorageService>(create: (_) => StorageService()),
+        Provider<DonationService>(create: (_) => DonationService()),
+
         // AuthProvider is created first; other providers may depend on it.
-        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+        ChangeNotifierProvider<AuthProvider>(
+          create: (context) =>
+              AuthProvider(storageService: context.read<StorageService>()),
+        ),
 
         // AdminProvider reacts to auth changes
         ChangeNotifierProxyProvider<AuthProvider, AdminProvider>(
@@ -62,9 +71,17 @@ class FoodBridgeApp extends StatelessWidget {
         // DonationProvider reacts to auth changes: starts/stops Firestore
         // streams automatically when the user signs in or out.
         ChangeNotifierProxyProvider<AuthProvider, DonationProvider>(
-          create: (_) => DonationProvider(),
-          update: (_, authProv, donationProv) {
-            final dp = donationProv ?? DonationProvider();
+          create: (context) => DonationProvider(
+            storageService: context.read<StorageService>(),
+            donationService: context.read<DonationService>(),
+          ),
+          update: (context, authProv, donationProv) {
+            final dp =
+                donationProv ??
+                DonationProvider(
+                  storageService: context.read<StorageService>(),
+                  donationService: context.read<DonationService>(),
+                );
             if (authProv.authState == AuthState.signedIn &&
                 authProv.currentUser != null) {
               dp.startSessionFor(authProv.currentUser!);
