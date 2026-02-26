@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -51,7 +52,8 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
 
   // ── Controllers ───────────────────────────────────────────────────────────
   final _foodNameCtrl = TextEditingController();
-  final _quantityCtrl = TextEditingController();
+  final _quantityNumberCtrl = TextEditingController();
+  final _quantityUnitCtrl = TextEditingController();
 
   // ── State ──────────────────────────────────────────────────────────────────
   String? _sourceStatus;
@@ -63,7 +65,8 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
   @override
   void dispose() {
     _foodNameCtrl.dispose();
-    _quantityCtrl.dispose();
+    _quantityNumberCtrl.dispose();
+    _quantityUnitCtrl.dispose();
     super.dispose();
   }
 
@@ -114,12 +117,15 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
       return;
     }
 
+    final qtyNum = _quantityNumberCtrl.text.trim();
+    final qtyUnit = _quantityUnitCtrl.text.trim();
+
     final draft = FoodDraft(
       foodName: _foodNameCtrl.text.trim(),
       sourceStatus: _sourceStatus!,
       dietaryBase: _dietaryBase!,
       contains: _contains,
-      quantity: _quantityCtrl.text.trim(),
+      quantity: '$qtyNum $qtyUnit',
       storageType: _storageType,
       photo: _pickedImage,
     );
@@ -188,14 +194,49 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
               const Gap(14),
 
               // ── Quantity ─────────────────────────────────────────────────
-              CustomTextField(
-                controller: _quantityCtrl,
-                label: 'Quantity',
-                hint: 'e.g. 10 pax, 3 kg, 20 packets',
-                prefixIcon: Icons.production_quantity_limits_outlined,
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Quantity is required.'
-                    : null,
+              Text(
+                'Quantity',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Gap(8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: CustomTextField(
+                      controller: _quantityNumberCtrl,
+                      label: 'Value',
+                      hint: 'e.g. 10',
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      prefixIcon: Icons.production_quantity_limits_outlined,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Value needed'
+                          : null,
+                    ),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    flex: 3,
+                    child: CustomTextField(
+                      controller: _quantityUnitCtrl,
+                      label: 'Unit',
+                      hint: 'e.g. pax, kg, packets',
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-Z\s]'),
+                        ),
+                      ],
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Unit needed'
+                          : null,
+                    ),
+                  ),
+                ],
               ),
               const Gap(14),
 

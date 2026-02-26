@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  CustomTextField
@@ -18,6 +19,7 @@ class CustomTextField extends StatefulWidget {
   final int maxLines;
   final bool readOnly;
   final VoidCallback? onTap;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -33,6 +35,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines = 1,
     this.readOnly = false,
     this.onTap,
+    this.inputFormatters,
   });
 
   @override
@@ -52,6 +55,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         controller: widget.controller,
         obscureText: widget.isPassword && _obscure,
         keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
         validator: widget.validator,
         onChanged: widget.onChanged,
         onFieldSubmitted: widget.onFieldSubmitted,
@@ -61,8 +65,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
         decoration: InputDecoration(
           labelText: widget.label,
           hintText: widget.hint,
-          prefixIcon:
-              widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
+          prefixIcon: widget.prefixIcon != null
+              ? Icon(widget.prefixIcon)
+              : null,
           // Show eye toggle only for password fields
           suffixIcon: widget.isPassword
               ? IconButton(

@@ -96,22 +96,6 @@ class _DonationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (donations.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.inbox_rounded, size: 56, color: Colors.black26),
-            Gap(12),
-            Text(
-              'No donations here yet.',
-              style: TextStyle(color: Colors.black45),
-            ),
-          ],
-        ),
-      );
-    }
-
     return RefreshIndicator(
       onRefresh: () async {
         final uid = context.read<AuthProvider>().currentUser?.uid;
@@ -121,16 +105,42 @@ class _DonationList extends StatelessWidget {
           await Future.delayed(const Duration(milliseconds: 600));
         }
       },
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: donations.length,
-        itemBuilder: (_, i) => _DonationCard(
-          donation: donations[i],
-          showCancelButton: showCancelButton,
-          showResultButton: showResultButton,
-        ),
-      ),
+      child: donations.isEmpty
+          ? const CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.inbox_rounded,
+                          size: 56,
+                          color: Colors.black26,
+                        ),
+                        Gap(12),
+                        Text(
+                          'No donations here yet.',
+                          style: TextStyle(color: Colors.black45),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: donations.length,
+              itemBuilder: (_, i) => _DonationCard(
+                donation: donations[i],
+                showCancelButton: showCancelButton,
+                showResultButton: showResultButton,
+              ),
+            ),
     );
   }
 }
