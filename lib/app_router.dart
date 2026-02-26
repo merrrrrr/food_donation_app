@@ -73,7 +73,10 @@ abstract final class AppRouter {
       donorHome => _fade(const DonorMainScreen(), settings),
       donorUpload => _slide(const UploadFoodScreen(), settings),
       donorUploadStep2 => _slide(const UploadFoodStep2Screen(), settings),
-      donorStatus => _slide(const DonorStatusScreen(), settings),
+      donorStatus => _slide(
+        DonorStatusScreen(initialIndex: settings.arguments as int? ?? 0),
+        settings,
+      ),
       donorResult => _slide(const DonorResultScreen(), settings),
       donorHistory => _slide(const DonorHistoryScreen(), settings),
       donorProfile => _slide(const DonorProfileScreen(), settings),
