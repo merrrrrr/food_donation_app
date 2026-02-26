@@ -37,16 +37,16 @@ class DonationService {
         // Avoid Firestore composite index requirement by sorting client-side.
         .snapshots()
         .map((snap) {
-      final list = _mapSnapshot(snap);
-      list.sort((a, b) {
-        final aCreated =
-            a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bCreated =
-            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bCreated.compareTo(aCreated); // newest first
-      });
-      return list;
-    });
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) {
+            final aCreated =
+                a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bCreated =
+                b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return bCreated.compareTo(aCreated); // newest first
+          });
+          return list;
+        });
   }
 
   /// Real-time stream of all `pending` donations — used by the NGO discovery
@@ -58,10 +58,10 @@ class DonationService {
         // Avoid Firestore composite index requirement by sorting client-side.
         .snapshots()
         .map((snap) {
-      final list = _mapSnapshot(snap);
-      list.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
-      return list;
-    });
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+          return list;
+        });
   }
 
   /// Real-time stream of a specific NGO's claimed/completed donations.
@@ -71,16 +71,20 @@ class DonationService {
         // Avoid Firestore composite index requirement by sorting client-side.
         .snapshots()
         .map((snap) {
-      final list = _mapSnapshot(snap);
-      list.sort((a, b) {
-        final aUpdated =
-            a.updatedAt ?? a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bUpdated =
-            b.updatedAt ?? b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bUpdated.compareTo(aUpdated); // newest first
-      });
-      return list;
-    });
+          final list = _mapSnapshot(snap);
+          list.sort((a, b) {
+            final aUpdated =
+                a.updatedAt ??
+                a.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            final bUpdated =
+                b.updatedAt ??
+                b.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            return bUpdated.compareTo(aUpdated); // newest first
+          });
+          return list;
+        });
   }
 
   // ── Fetch single ──────────────────────────────────────────────────────────
@@ -99,6 +103,7 @@ class DonationService {
     required String ngoId,
     required String ngoName,
     required String ngoPhone,
+    required DateTime scheduledPickupTime,
   }) async {
     await _db.runTransaction((tx) async {
       final ref = _donationsCol.doc(donationId);
@@ -116,13 +121,56 @@ class DonationService {
         'ngoId': ngoId,
         'ngoName': ngoName,
         'ngoPhone': ngoPhone,
+        'scheduledPickupTime': Timestamp.fromDate(scheduledPickupTime),
+        'claimedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
   }
 
+  /// Reverts any `claimed` donations where the NGO is more than 1 hour late
+  /// back to `pending`.
+  Future<void> revertLateClaims() async {
+    final now = DateTime.now();
+    final oneHourAgo = now.subtract(const Duration(hours: 1));
+
+    final lateClaims = await _donationsCol
+        .where('status', isEqualTo: DonationStatus.claimed.toJson())
+        .where(
+          'scheduledPickupTime',
+          isLessThan: Timestamp.fromDate(oneHourAgo),
+        )
+        .get();
+
+    if (lateClaims.docs.isEmpty) return;
+
+    final batch = _db.batch();
+    for (final doc in lateClaims.docs) {
+      batch.update(doc.reference, {
+        'status': DonationStatus.pending.toJson(),
+        'ngoId': null,
+        'ngoName': null,
+        'ngoPhone': null,
+        'scheduledPickupTime': null,
+        'claimedAt': null,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
+  }
+
+  // ── Verify Handover ────────────────────────────────────────────────────────
+  /// Transitions a donation from `claimed` → `pickedUp`.
+  /// Called by the Donor to signify the food has been handed over.
+  Future<void> verifyHandover(String donationId) async {
+    await _donationsCol.doc(donationId).update({
+      'status': DonationStatus.pickedUp.toJson(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   // ── Complete ──────────────────────────────────────────────────────────────
-  /// Transitions a donation from `claimed` → `completed` and attaches the
+  /// Transitions a donation from `pickedUp` → `completed` and attaches the
   /// evidence photo URL uploaded by the NGO.
   Future<void> completeDonation({
     required String donationId,
@@ -141,6 +189,35 @@ class DonationService {
     await _donationsCol.doc(donationId).update({
       'status': DonationStatus.cancelled.toJson(),
       'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Allows an NGO to cancel their claim within the first 30 minutes.
+  Future<void> cancelClaim(String donationId) async {
+    await _db.runTransaction((tx) async {
+      final ref = _donationsCol.doc(donationId);
+      final snap = await tx.get(ref);
+
+      if (!snap.exists) throw Exception('Donation not found.');
+
+      final model = DonationModel.fromDocument(snap);
+      if (model.status != DonationStatus.claimed) {
+        throw Exception('This donation is not in a claimed state.');
+      }
+
+      if (!model.canCancelClaim) {
+        throw Exception('Cancellation window (30 mins) has expired.');
+      }
+
+      tx.update(ref, {
+        'status': DonationStatus.pending.toJson(),
+        'ngoId': null,
+        'ngoName': null,
+        'ngoPhone': null,
+        'scheduledPickupTime': null,
+        'claimedAt': null,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 

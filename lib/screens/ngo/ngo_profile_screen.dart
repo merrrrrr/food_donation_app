@@ -173,8 +173,12 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final claimed = donationProv.ngoDonations
-        .where((d) => d.status == DonationStatus.claimed)
+    final activeCount = donationProv.ngoDonations
+        .where(
+          (d) =>
+              d.status == DonationStatus.claimed ||
+              d.status == DonationStatus.pickedUp,
+        )
         .length;
     final completed = donationProv.ngoDonations
         .where((d) => d.status == DonationStatus.completed)
@@ -323,7 +327,7 @@ class _NgoProfileScreenState extends State<NgoProfileScreen> {
                   Expanded(
                     child: _StatTile(
                       label: 'Active Claims',
-                      value: claimed.toString(),
+                      value: activeCount.toString(),
                       icon: Icons.local_shipping_outlined,
                       color: AppTheme.statusClaimed,
                     ),

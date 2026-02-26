@@ -30,7 +30,7 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
     super.initState();
     _tabController = TabController(
       initialIndex: widget.initialIndex,
-      length: 3,
+      length: 4,
       vsync: this,
     );
     // Stream is started by ChangeNotifierProxyProvider when session begins.
@@ -54,6 +54,9 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
     final claimed = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.claimed)
         .toList();
+    final pickedUp = donationProv.donorDonations
+        .where((d) => d.status == DonationStatus.pickedUp)
+        .toList();
     final completed = donationProv.donorDonations
         .where((d) => d.status == DonationStatus.completed)
         .toList();
@@ -67,6 +70,7 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
           tabs: [
             Tab(text: 'Pending (${pending.length})'),
             Tab(text: 'Claimed (${claimed.length})'),
+            Tab(text: 'Picked Up (${pickedUp.length})'),
             Tab(text: 'Done (${completed.length})'),
           ],
         ),
@@ -77,7 +81,8 @@ class _DonorStatusScreenState extends State<DonorStatusScreen>
               controller: _tabController,
               children: [
                 _DonationList(donations: pending, showCancelButton: true),
-                _DonationList(donations: claimed),
+                _DonationList(donations: claimed, showVerifyButton: true),
+                _DonationList(donations: pickedUp),
                 _DonationList(donations: completed, showResultButton: true),
               ],
             ),
@@ -92,11 +97,13 @@ class _DonationList extends StatelessWidget {
   final List<DonationModel> donations;
   final bool showCancelButton;
   final bool showResultButton;
+  final bool showVerifyButton;
 
   const _DonationList({
     required this.donations,
     this.showCancelButton = false,
     this.showResultButton = false,
+    this.showVerifyButton = false,
   });
 
   @override
@@ -144,6 +151,7 @@ class _DonationList extends StatelessWidget {
                 donation: donations[i],
                 showCancelButton: showCancelButton,
                 showResultButton: showResultButton,
+                showVerifyButton: showVerifyButton,
               ),
             ),
     );
@@ -157,17 +165,20 @@ class _DonationCard extends StatelessWidget {
   final DonationModel donation;
   final bool showCancelButton;
   final bool showResultButton;
+  final bool showVerifyButton;
 
   const _DonationCard({
     required this.donation,
     this.showCancelButton = false,
     this.showResultButton = false,
+    this.showVerifyButton = false,
   });
 
   Color _statusColor() {
     return switch (donation.status) {
       DonationStatus.pending => AppTheme.statusPending,
       DonationStatus.claimed => AppTheme.statusClaimed,
+      DonationStatus.pickedUp => AppTheme.statusClaimed,
       DonationStatus.completed => AppTheme.statusCompleted,
       DonationStatus.cancelled => Colors.grey,
     };
@@ -252,6 +263,14 @@ class _DonationCard extends StatelessWidget {
                 onPressed: () => _confirmCancel(context),
               ),
             ],
+            if (showVerifyButton) ...[
+              const Gap(12),
+              FilledButton.icon(
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('Confirm Handover'),
+                onPressed: () => _confirmHandover(context),
+              ),
+            ],
             if (showResultButton) ...[
               const Gap(12),
               OutlinedButton.icon(
@@ -291,6 +310,32 @@ class _DonationCard extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       await context.read<DonationProvider>().cancelDonation(donation.id);
+    }
+  }
+
+  Future<void> _confirmHandover(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm Handover?'),
+        content: Text(
+          'Are you at the location and handing over "${donation.foodName}" to ${donation.ngoName}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not Yet'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes, Handover Verified'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<DonationProvider>().verifyHandover(donation.id);
     }
   }
 }
