@@ -30,6 +30,15 @@ class DonationProvider extends ChangeNotifier {
   double uploadProgress = 0.0;
   String? errorMessage;
 
+  // ── Donor Navigation State ────────────────────────────────────────────────
+  int _donorSelectedIndex = 0;
+  int get donorSelectedIndex => _donorSelectedIndex;
+
+  void setDonorTab(int index) {
+    _donorSelectedIndex = index;
+    notifyListeners();
+  }
+
   // ── NGO Navigation & Filter State ──────────────────────────────────────────
   int _ngoSelectedIndex = 0;
   int get ngoSelectedIndex => _ngoSelectedIndex;

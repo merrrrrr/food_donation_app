@@ -127,10 +127,7 @@ class _NgoHomeScreenState extends State<NgoHomeScreen> {
               const Gap(28),
 
               // ── Hero discovery CTA ────────────────────────────────────────
-              _DiscoveryCTACard(
-                onTap: () =>
-                    Navigator.of(context).pushNamed(AppRouter.ngoDiscovery),
-              ),
+              _DiscoveryCTACard(onTap: () => donationProv.setNgoTab(1)),
               const Gap(24),
 
               // ── Quick stats ───────────────────────────────────────────────
