@@ -104,6 +104,11 @@ class DonorResultScreen extends StatelessWidget {
                       label: 'Claimed by',
                       value: donation.ngoName ?? '—',
                     ),
+                    if (donation.ngoPhone != null)
+                      _ResultRow(
+                        label: 'NGO Contact',
+                        value: donation.ngoPhone!,
+                      ),
                   ],
                 ),
               ),

@@ -223,6 +223,11 @@ class _DonationCard extends StatelessWidget {
                 icon: Icons.handshake_rounded,
                 label: 'Claimed by: ${donation.ngoName}',
               ),
+            if (donation.ngoPhone != null)
+              _InfoRow(
+                icon: Icons.phone_outlined,
+                label: 'NGO Contact: ${donation.ngoPhone}',
+              ),
             if (donation.address != null)
               _InfoRow(
                 icon: Icons.location_on_outlined,

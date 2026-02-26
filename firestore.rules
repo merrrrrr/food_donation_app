@@ -27,6 +27,7 @@ service cloud.firestore {
 
     function isDonor() { return isSignedIn() && callerRole() == 'donor'; }
     function isNGO()   { return isSignedIn() && callerRole() == 'ngo';   }
+    function isAdmin() { return isSignedIn() && callerRole() == 'admin'; }
 
     // ── /users/{userId} ─────────────────────────────────────────────────────
     //  • Any authenticated user can read any user profile (needed for in-app
@@ -36,7 +37,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read:   if isSignedIn();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if false;
     }
 

@@ -5,7 +5,6 @@ import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
@@ -143,9 +142,8 @@ class _NgoResultScreenState extends State<NgoResultScreen> {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.home_outlined),
                   label: const Text('Back to Dashboard'),
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil(AppRouter.ngoHome, (_) => false),
+                  onPressed: () =>
+                      Navigator.of(context).popUntil((route) => route.isFirst),
                 ),
               ],
             ),

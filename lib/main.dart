@@ -7,7 +7,9 @@ import 'firebase_options.dart';
 
 import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
+import 'package:food_donation_app/providers/admin_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
+import 'package:food_donation_app/models/user_model.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +43,21 @@ class FoodBridgeApp extends StatelessWidget {
       providers: [
         // AuthProvider is created first; other providers may depend on it.
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+
+        // AdminProvider reacts to auth changes
+        ChangeNotifierProxyProvider<AuthProvider, AdminProvider>(
+          create: (_) => AdminProvider(),
+          update: (_, authProv, adminProv) {
+            final ap = adminProv ?? AdminProvider();
+            if (authProv.authState == AuthState.signedIn &&
+                authProv.currentUser?.role == UserRole.admin) {
+              ap.startAdminSession();
+            } else {
+              ap.endAdminSession();
+            }
+            return ap;
+          },
+        ),
 
         // DonationProvider reacts to auth changes: starts/stops Firestore
         // streams automatically when the user signs in or out.

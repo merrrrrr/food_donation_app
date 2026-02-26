@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:food_donation_app/app_router.dart';
@@ -26,8 +25,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
     final user = auth.currentUser;
     if (user == null) return;
     final nameCtrl = TextEditingController(text: user.displayName);
-    final phoneCtrl = TextEditingController(text: user.phone ?? '');
-    final addressCtrl = TextEditingController(text: user.address ?? '');
+    final phoneCtrl = TextEditingController(text: user.phone);
     final formKey = GlobalKey<FormState>();
 
     await showModalBottomSheet<void>(
@@ -74,18 +72,17 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                 const Gap(12),
                 TextFormField(
                   controller: phoneCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone (optional)',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Phone'),
                   keyboardType: TextInputType.phone,
-                ),
-                const Gap(12),
-                TextFormField(
-                  controller: addressCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Address (optional)',
-                  ),
-                  maxLines: 2,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Phone number is required.';
+                    }
+                    if (v.trim().length < 8) {
+                      return 'Enter a valid phone number.';
+                    }
+                    return null;
+                  },
                 ),
                 const Gap(20),
                 FilledButton(
@@ -93,10 +90,7 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
                     if (!formKey.currentState!.validate()) return;
                     final success = await auth.updateProfile(
                       displayName: nameCtrl.text,
-                      phone: phoneCtrl.text.isEmpty ? null : phoneCtrl.text,
-                      address: addressCtrl.text.isEmpty
-                          ? null
-                          : addressCtrl.text,
+                      phone: phoneCtrl.text,
                     );
                     if (!mounted) return;
                     if (!success && auth.errorMessage != null) {
@@ -246,8 +240,20 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
 
                     const Gap(4),
 
+                    const Gap(4),
+
                     Text(
                       user?.email ?? '—',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+
+                    const Gap(4),
+
+                    // Phone Number Display
+                    Text(
+                      user?.phone ?? '—',
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
@@ -333,45 +339,22 @@ class _DonorProfileScreenState extends State<DonorProfileScreen> {
               ),
               const Gap(24),
 
-              // ── History list ──────────────────────────────────────────────
-              Text(
-                'Donation History',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+              const Gap(16),
+
+              OutlinedButton.icon(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRouter.donorHistory),
+                icon: const Icon(Icons.history),
+                label: const Text('View Full Donation History'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: colorScheme.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-              const Gap(12),
-
-              if (donationProv.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (donationProv.donorDonations.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Text(
-                      "You haven't donated anything yet.\nTap '+' to get started!",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black45),
-                    ),
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: donationProv.donorDonations.length,
-                  itemBuilder: (_, i) {
-                    final d = donationProv.donorDonations[i];
-                    return _HistoryTile(
-                      donation: d,
-                      onTap: d.status == DonationStatus.completed
-                          ? () => Navigator.of(
-                              context,
-                            ).pushNamed(AppRouter.donorResult, arguments: d)
-                          : null,
-                    );
-                  },
-                ),
+              const Gap(24),
             ],
           ),
         ),
@@ -433,62 +416,6 @@ class _StatTile extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  _HistoryTile
-// ─────────────────────────────────────────────────────────────────────────────
-class _HistoryTile extends StatelessWidget {
-  final DonationModel donation;
-  final VoidCallback? onTap;
-  const _HistoryTile({required this.donation, this.onTap});
-
-  Color _statusColor() => switch (donation.status) {
-    DonationStatus.pending => AppTheme.statusPending,
-    DonationStatus.claimed => AppTheme.statusClaimed,
-    DonationStatus.completed => AppTheme.statusCompleted,
-    DonationStatus.cancelled => Colors.grey,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _statusColor();
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: CircleAvatar(
-        backgroundColor: color.withValues(alpha: 0.15),
-        child: Icon(Icons.fastfood_rounded, color: color, size: 20),
-      ),
-      title: Text(
-        donation.foodName,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        DateFormat(
-          'dd MMM yyyy',
-        ).format(donation.createdAt ?? donation.expiryDate),
-        style: const TextStyle(fontSize: 12),
-      ),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          donation.status.displayLabel,
-          style: TextStyle(
-            fontSize: 11,
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      onTap: onTap,
     );
   }
 }

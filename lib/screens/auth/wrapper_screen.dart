@@ -6,6 +6,7 @@ import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/screens/auth/login_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_main_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_main_screen.dart';
+import 'package:food_donation_app/screens/admin/admin_dashboard_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  WrapperScreen
@@ -30,10 +31,12 @@ class WrapperScreen extends StatelessWidget {
       AuthState.signedOut => const LoginScreen(),
 
       // Signed in — route to the correct role dashboard
-      AuthState.signedIn =>
-        authProvider.currentUser?.role == UserRole.donor
-            ? const DonorMainScreen()
-            : const NgoMainScreen(),
+      AuthState.signedIn => switch (authProvider.currentUser?.role) {
+        UserRole.admin => const AdminDashboardScreen(),
+        UserRole.donor => const DonorMainScreen(),
+        UserRole.ngo => const NgoMainScreen(),
+        null => const Scaffold(body: Center(child: Text('Unknown User Role'))),
+      },
     };
   }
 }

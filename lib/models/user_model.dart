@@ -6,7 +6,7 @@ import 'package:equatable/equatable.dart';
 //  Two roles exist in the system. The string values are stored in Firestore
 //  so they must remain stable (avoid renaming without a migration).
 // ─────────────────────────────────────────────────────────────────────────────
-enum UserRole { donor, ngo }
+enum UserRole { donor, ngo, admin }
 
 extension UserRoleExtension on UserRole {
   /// Converts the enum to the lowercase string stored in Firestore.
@@ -43,8 +43,10 @@ class UserModel extends Equatable {
   final String email;
   final UserRole role;
   final String? photoUrl;
-  final String? phone;
+  final String phone;
   final String? address;
+  final bool isVerified;
+  final String? registrationNumber;
   final DateTime? createdAt;
 
   const UserModel({
@@ -52,9 +54,11 @@ class UserModel extends Equatable {
     required this.displayName,
     required this.email,
     required this.role,
+    required this.phone,
     this.photoUrl,
-    this.phone,
     this.address,
+    this.isVerified = true, // default true for donors/legacy users
+    this.registrationNumber,
     this.createdAt,
   });
 
@@ -67,8 +71,10 @@ class UserModel extends Equatable {
       email: data['email'] as String,
       role: UserRoleExtension.fromJson(data['role'] as String),
       photoUrl: data['photoUrl'] as String?,
-      phone: data['phone'] as String?,
+      phone: data['phone'] as String,
       address: data['address'] as String?,
+      isVerified: data['isVerified'] as bool? ?? true,
+      registrationNumber: data['registrationNumber'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -82,9 +88,11 @@ class UserModel extends Equatable {
       'displayName': displayName,
       'email': email,
       'role': role.toJson(),
+      'phone': phone,
       if (photoUrl != null) 'photoUrl': photoUrl,
-      if (phone != null) 'phone': phone,
       if (address != null) 'address': address,
+      'isVerified': isVerified,
+      if (registrationNumber != null) 'registrationNumber': registrationNumber,
       if (includeCreatedAt) 'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -97,20 +105,34 @@ class UserModel extends Equatable {
     String? photoUrl,
     String? phone,
     String? address,
+    bool? isVerified,
+    String? registrationNumber,
   }) {
     return UserModel(
       uid: uid,
       displayName: displayName ?? this.displayName,
       email: email ?? this.email,
       role: role ?? this.role,
-      photoUrl: photoUrl ?? this.photoUrl,
       phone: phone ?? this.phone,
+      photoUrl: photoUrl ?? this.photoUrl,
       address: address ?? this.address,
+      isVerified: isVerified ?? this.isVerified,
+      registrationNumber: registrationNumber ?? this.registrationNumber,
       createdAt: createdAt,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [uid, displayName, email, role, photoUrl, phone, address, createdAt];
+  List<Object?> get props => [
+    uid,
+    displayName,
+    email,
+    role,
+    photoUrl,
+    phone,
+    address,
+    isVerified,
+    registrationNumber,
+    createdAt,
+  ];
 }

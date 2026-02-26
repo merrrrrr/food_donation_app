@@ -10,6 +10,7 @@ import 'package:food_donation_app/screens/donor/donor_main_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_profile_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_result_screen.dart';
 import 'package:food_donation_app/screens/donor/donor_status_screen.dart';
+import 'package:food_donation_app/screens/donor/donor_history_screen.dart';
 import 'package:food_donation_app/screens/donor/location_picker_screen.dart';
 import 'package:food_donation_app/screens/donor/upload_food_screen.dart';
 import 'package:food_donation_app/screens/donor/upload_food_step2_screen.dart';
@@ -22,6 +23,10 @@ import 'package:food_donation_app/screens/ngo/ngo_main_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_profile_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_result_screen.dart';
 import 'package:food_donation_app/screens/ngo/ngo_ai_match_screen.dart';
+import 'package:food_donation_app/screens/ngo/ngo_history_screen.dart';
+
+// Screen imports — Admin
+import 'package:food_donation_app/screens/admin/admin_dashboard_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AppRouter
@@ -43,6 +48,7 @@ abstract final class AppRouter {
   static const String donorUploadStep2 = '/donor/upload/step2';
   static const String donorStatus = '/donor/status';
   static const String donorResult = '/donor/result';
+  static const String donorHistory = '/donor/history';
   static const String donorProfile = '/donor/profile';
   static const String donorLocationPicker = '/donor/location-picker';
 
@@ -51,8 +57,12 @@ abstract final class AppRouter {
   static const String ngoDiscovery = '/ngo/discovery';
   static const String ngoFoodDetail = '/ngo/food-detail';
   static const String ngoResult = '/ngo/result';
+  static const String ngoHistory = '/ngo/history';
   static const String ngoProfile = '/ngo/profile';
   static const String ngoAiMatch = '/ngo/ai-match';
+
+  // Admin routes
+  static const String adminHome = '/admin/home';
 
   // ── Route generator ───────────────────────────────────────────────────────
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -67,6 +77,7 @@ abstract final class AppRouter {
       donorUploadStep2 => _slide(const UploadFoodStep2Screen(), settings),
       donorStatus => _slide(const DonorStatusScreen(), settings),
       donorResult => _slide(const DonorResultScreen(), settings),
+      donorHistory => _slide(const DonorHistoryScreen(), settings),
       donorProfile => _slide(const DonorProfileScreen(), settings),
       donorLocationPicker => _slide(
         LocationPickerScreen(initialLocation: settings.arguments as LatLng?),
@@ -78,8 +89,12 @@ abstract final class AppRouter {
       ngoDiscovery => _slide(const NgoDiscoveryScreen(), settings),
       ngoFoodDetail => _slide(const NgoFoodDetailScreen(), settings),
       ngoResult => _slide(const NgoResultScreen(), settings),
+      ngoHistory => _slide(const NgoHistoryScreen(), settings),
       ngoProfile => _slide(const NgoProfileScreen(), settings),
       ngoAiMatch => _slide(const NgoAiMatchScreen(), settings),
+
+      // Admin
+      adminHome => _fade(const AdminDashboardScreen(), settings),
 
       // Fallback for unknown routes
       _ => MaterialPageRoute(

@@ -64,6 +64,8 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String displayName,
     required UserRole role,
+    String? phone,
+    String? registrationNumber,
   }) async {
     _setLoading(true);
     try {
@@ -72,6 +74,8 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         displayName: displayName,
         role: role,
+        phone: phone,
+        registrationNumber: registrationNumber,
       );
       authState = AuthState.signedIn;
       _setLoading(false);

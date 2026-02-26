@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 
@@ -21,18 +22,22 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  final _regNoCtrl = TextEditingController();
 
   UserRole _selectedRole = UserRole.donor;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _phoneCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
+    _regNoCtrl.dispose();
     super.dispose();
   }
 
@@ -45,7 +50,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       email: _emailCtrl.text,
       password: _passwordCtrl.text,
       displayName: _nameCtrl.text,
+      phone: _phoneCtrl.text,
       role: _selectedRole,
+      registrationNumber: _selectedRole == UserRole.ngo
+          ? _regNoCtrl.text
+          : null,
     );
 
     if (!mounted) return;
@@ -152,6 +161,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const Gap(16),
+
+                  // ── Phone Number ──────────────────────────────────────────────────────────
+                  CustomTextField(
+                    controller: _phoneCtrl,
+                    label: 'Phone Number',
+                    hint: '0123456789',
+                    prefixIcon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onFieldSubmitted: (_) => _onRegister(),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Phone number is required.';
+                      }
+                      if (v.trim().length < 8) {
+                        return 'Enter a valid phone number.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const Gap(16),
+
+                  // ── Registration Number (NGOs only) ───────────────────────
+                  if (_selectedRole == UserRole.ngo) ...[
+                    CustomTextField(
+                      controller: _regNoCtrl,
+                      label: 'ROC / ROS Registration Number',
+                      hint: 'e.g. PPM-001-10-01012024',
+                      prefixIcon: Icons.badge_outlined,
+                      onFieldSubmitted: (_) => _onRegister(),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Registration number is required for NGOs.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const Gap(16),
+                  ],
 
                   // ── Email ─────────────────────────────────────────────────
                   CustomTextField(
