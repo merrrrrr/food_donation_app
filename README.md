@@ -194,7 +194,7 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/food_donation_app.git
+git clone https://github.com/merrrrrr/food_donation_app.git
 cd food_donation_app
 ```
 
