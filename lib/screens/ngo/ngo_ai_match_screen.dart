@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -15,11 +15,10 @@ import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ⚠️  Replace this with your actual Gemini API key from
-//      https://aistudio.google.com/apikeys
-//      For production use --dart-define or a remote config service.
+//  Firebase AI Logic — no API key required. Auth is handled by Firebase.
+//  Enable "Firebase AI Logic" in your Firebase console before using this.
+//  https://firebase.google.com/docs/ai-logic/get-started
 // ─────────────────────────────────────────────────────────────────────────────
-const _kGeminiApiKey = 'AIzaSyDlFVrFmoZrEmghReVGXKro76ipBtDpTKA';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Dietary preference options shown in the form dropdown.
@@ -28,8 +27,8 @@ const _kDietaryOptions = ['Any', 'Halal', 'Vegetarian / Vegan'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  NgoAiMatchScreen
-//  Lets the NGO describe their needs, then uses Gemini 2.0 Flash to rank
-//  the available (pending, non-expired) donations by suitability.
+//  Lets the NGO describe their needs, then uses Gemini 2.0 Flash via
+//  Firebase AI Logic to rank available (pending, non-expired) donations.
 // ─────────────────────────────────────────────────────────────────────────────
 class NgoAiMatchScreen extends StatefulWidget {
   const NgoAiMatchScreen({super.key});
@@ -65,6 +64,10 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
   // Cooldown to prevent rate limit spam
   int _cooldownRemaining = 0;
   Timer? _cooldownTimer;
+
+  // Caching: prevent redundant calls if inputs haven't changed
+  String? _lastSearchRequestHash;
+  List<_MatchResult>? _cachedResults;
 
   // Current device location (used for distance calculation)
   Position? _devicePosition;
@@ -196,29 +199,41 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
     });
   }
 
+  // ── Parse the leading integer from a quantity string ──────────────────────
+  // e.g. "30 box" → 30,  "15 cups" → 15,  "unknown" → null
+  int? _parseQtyNumber(String quantity) {
+    final match = RegExp(r'^\s*(\d+)').firstMatch(quantity);
+    if (match == null) return null;
+    return int.tryParse(match.group(1)!);
+  }
+
   // ── Local fuzzy pre-ranking ──────────────────────────────────────────────
-  // Assigns a rough score based on dietary, distance, and keyword match.
-  // Helps us pick the best 10 to send to Gemini.
-  int _localScore(DonationModel d, String query, String dietary) {
+  // Assigns a rough score based on dietary, distance, keyword match,
+  // and how well the donation quantity covers the number of people needed.
+  int _localScore(
+    DonationModel d,
+    String query,
+    String dietary, {
+    int? peopleCount,
+  }) {
     int score = 0;
 
     // 1. Dietary Match (Critical)
     if (dietary != 'Any') {
       if (dietary == 'Halal') {
         if (d.sourceStatus == DietarySourceStatus.halal) {
-          score += 100;
+          score += 150;
         } else if (d.sourceStatus == DietarySourceStatus.porkFree) {
-          score += 50;
-        } else {
-          score -= 200; // Major penalty
-        }
-      } else if (dietary == 'Vegetarian / Vegan') {
-        if (d.dietaryBase == DietaryBase.vegan) {
-          score += 100;
-        } else if (d.dietaryBase == DietaryBase.vegetarian) {
           score += 80;
         } else {
-          score -= 200;
+          score -= 300; // Severe penalty for non-halal when halal requested
+        }
+      } else if (dietary == 'Vegetarian / Vegan') {
+        if (d.dietaryBase == DietaryBase.vegan ||
+            d.dietaryBase == DietaryBase.vegetarian) {
+          score += 150;
+        } else {
+          score -= 300; // Severe penalty
         }
       }
     }
@@ -228,17 +243,28 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
       final q = query.toLowerCase();
       final name = d.foodName.toLowerCase();
       if (name.contains(q)) {
-        score += 80;
-      } else {
-        // Simple token match
-        final tokens = q.split(RegExp(r'\s+'));
-        for (final t in tokens) {
-          if (t.length > 2 && name.contains(t)) score += 30;
+        score += 100;
+      }
+    }
+
+    // 3. Quantity-fit vs people to feed
+    if (peopleCount != null && peopleCount > 0) {
+      final donationQty = _parseQtyNumber(d.quantity);
+      if (donationQty != null) {
+        final ratio = donationQty / peopleCount;
+        if (ratio >= 1.0) {
+          score += 120; // Covers everyone — best case
+        } else if (ratio >= 0.75) {
+          score += 70;  // Covers 75%+ — still useful
+        } else if (ratio >= 0.5) {
+          score += 30;  // Covers half — marginal
+        } else {
+          score -= 50;  // Too little to make a meaningful difference
         }
       }
     }
 
-    // 3. Distance Bonus
+    // 4. Distance Bonus
     if (_devicePosition != null) {
       final dist = _distanceKm(
         _devicePosition!.latitude,
@@ -246,17 +272,14 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
         d.latitude,
         d.longitude,
       );
-      // High bonus for very close items
-      if (dist < 2) {
-        score += 50;
-      } else if (dist < 5) {
+      if (dist < 3) {
+        score += 60;
+      } else if (dist < 8) {
         score += 30;
-      } else if (dist < 10) {
-        score += 15;
       }
     }
 
-    // 4. Freshness
+    // 5. Freshness
     if (d.isExpiringSoon) score += 20;
 
     return score;
@@ -289,25 +312,36 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
       return;
     }
 
-    setState(() {
-      _isAnalysing = true;
-      _errorMessage = null;
-      _results = [];
-      _retryAttempt = 0;
-      _retryCountdown = 0;
-    });
-    _startCooldown(5); // 5 second gap
-
-    // 2. Local Pre-Ranking to pick the TOP 10
+    // 2. Local Pre-Ranking to pick the TOP 6 (reduced from 10 to save quota/speed)
     final query = _foodTypeCtrl.text.trim();
+    final qty = _quantityCtrl.text.trim();
+    final notes = _notesCtrl.text.trim();
+
+    // Generate a simple hash of current inputs
+    final currentHash =
+        '$query|$_selectedDietary|$qty|$notes|${_maxDistanceKm.toInt()}';
+
+    // CHECK CACHE: If inputs haven't changed and we have results, reuse them
+    if (currentHash == _lastSearchRequestHash && _cachedResults != null) {
+      setState(() {
+        _results = _cachedResults!;
+        _hasSearched = true;
+        _isAnalysing = false;
+        _errorMessage = 'Showing cached results (inputs haven\'t changed).';
+      });
+      return;
+    }
+
+    final parsedPeopleCount = int.tryParse(qty);
+
     final topCandidates = List<DonationModel>.from(candidates)
       ..sort((a, b) {
-        final sa = _localScore(a, query, _selectedDietary);
-        final sb = _localScore(b, query, _selectedDietary);
+        final sa = _localScore(a, query, _selectedDietary, peopleCount: parsedPeopleCount);
+        final sb = _localScore(b, query, _selectedDietary, peopleCount: parsedPeopleCount);
         return sb.compareTo(sa); // Highest local score first
       });
 
-    final capped = topCandidates.take(10).toList();
+    final capped = topCandidates.take(6).toList();
 
     // 3. Minified JSON payload to save tokens
     final donationJson = capped.map((d) {
@@ -319,49 +353,76 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
               d.longitude,
             ).toStringAsFixed(1)
           : null;
+      final numericQty = _parseQtyNumber(d.quantity);
       return {
-        'i': d.id, // i = id
-        'f': d.foodName, // f = food
-        'q': d.quantity, // q = qty
-        'd': '${d.sourceStatus} / ${d.dietaryBase}', // d = diet
+        'i': d.id,                                           // i = id
+        'f': d.foodName,                                     // f = food
+        'q': d.quantity,                                     // q = qty string
+        if (numericQty != null) 'n': numericQty,             // n = numeric qty
+        'd': '${d.sourceStatus} / ${d.dietaryBase}',         // d = diet
         'e': DateFormat('MM-dd HH:mm').format(d.expiryDate), // e = expiry
-        if (dist != null) 'k': dist, // k = km
+        if (dist != null) 'k': dist,                         // k = km
       };
     }).toList();
 
     final needsFood = query.isEmpty ? 'any' : query;
-    final needsQty = _quantityCtrl.text.trim().isEmpty
-        ? 'unspecified'
-        : _quantityCtrl.text.trim();
-    final needsNotes = _notesCtrl.text.trim().isEmpty
-        ? ''
-        : ' Notes: ${_notesCtrl.text.trim()}';
+    final needsQty = qty.isEmpty ? 'unspecified' : qty;
+    final needsNotes = notes.isEmpty ? '' : ' Notes: $notes';
+
+    // UI Feedback for fresh analysis
+    setState(() {
+      _isAnalysing = true;
+      _errorMessage = null;
+      _results = [];
+      _retryAttempt = 0;
+      _retryCountdown = 0;
+    });
+    _startCooldown(45); // Increased to 45s for Free Tier safety
 
     final prompt =
         '''
-Role: Food donation matcher for NGO.
-NGO Needs: food=$needsFood, diet=$_selectedDietary, qty=$needsQty.$needsNotes
-Available (JSON): ${jsonEncode(donationJson)}
+Role: Food Security & Nutrition Coordinator for NGO.
+Goal: Match available donations to the NGO's specific needs.
 
-Task: Rank these 10 items. Return ONLY JSON array.
-Format: [{"i":"id","s":0-100,"r":"reason ≤15 words"}]
-Details: s=matchScore, r=reason. Sort by s desc. Only s>=40.
+NGO Profile:
+- Feeding Need: $needsQty persons
+- Dietary Requirement: $_selectedDietary
+- Specific Food Requested: $needsFood
+- Context: $needsNotes
+
+Available Inventory (JSON):
+${jsonEncode(donationJson)}
+
+Tasks:
+1. Filter out items that strictly violate the Dietary Requirement (e.g., non-halal food for Halal needs).
+2. Rank items by how well they satisfy the Feeding Need. Use the numeric qty field "n" to judge sufficiency:
+   - n >= people needed          → quantity label "Perfect Match" or "Generous", score boost +20
+   - n >= 0.75 * people needed   → "Nearly Sufficient", no penalty
+   - n >= 0.5  * people needed   → "Insufficient — covers ~half", score penalty -15
+   - n <  0.5  * people needed   → "Too Little", score penalty -30
+   - If "n" is absent, infer from the qty string.
+3. Also consider food type relevance and dietary compatibility.
+4. For "reason", state the quantity verdict and why it matches in ≤15 words.
+
+Return ONLY a compact JSON array with NO whitespace or newlines between tokens.
+Format: [{"i":"id","s":score_0_to_100,"r":"reason_max_15_words"}]
+Sort by score descending. Only include scores >= 30.
 ''';
 
     debugPrint('--- AI MATCH REQUEST ---\n$prompt\n------------------------');
 
-    final model = GenerativeModel(
-      model: 'gemini-1.5-flash',
-      apiKey: _kGeminiApiKey,
+    // Firebase AI Logic — uses your Firebase project quota, no API key in app
+    final model = FirebaseAI.googleAI().generativeModel(
+      model: 'gemini-2.5-flash',
       generationConfig: GenerationConfig(
-        temperature: 0.2,
-        maxOutputTokens: 512,
+        temperature: 0.1,
+        maxOutputTokens: 4000,
         responseMimeType: 'application/json',
       ),
     );
 
-    // ── Retry loop (max 3 attempts) ─────────────────────────────────────────
-    const maxAttempts = 3;
+    // ── Retry loop (max 2 attempts for quota safety) ────────────────────────
+    const maxAttempts = 2;
     for (int attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         if (attempt > 0) setState(() => _retryAttempt = attempt);
@@ -372,8 +433,8 @@ Details: s=matchScore, r=reason. Sort by s desc. Only s>=40.
           '--- AI MATCH RESPONSE ---\n$text\n-------------------------',
         );
 
-        // Parse JSON response
-        final parsed = jsonDecode(text) as List<dynamic>;
+        // Parse JSON response — with fallback for truncated output
+        final parsed = _parseJsonSafe(text);
 
         final candidateMap = {for (final d in capped) d.id: d};
         final results = <_MatchResult>[];
@@ -408,6 +469,8 @@ Details: s=matchScore, r=reason. Sort by s desc. Only s>=40.
         _countdownTimer?.cancel();
         setState(() {
           _results = results;
+          _cachedResults = results;
+          _lastSearchRequestHash = currentHash;
           _hasSearched = true;
           _isAnalysing = false;
           _retryAttempt = 0;
@@ -416,12 +479,11 @@ Details: s=matchScore, r=reason. Sort by s desc. Only s>=40.
         return; // done — exit the retry loop
       } catch (e) {
         final errStr = e.toString();
-        final delay = _parseRetryDelay(errStr);
+        // Extract strictly 429 or Resource Exhausted
         final isQuotaError =
-            errStr.contains('quota') ||
-            errStr.contains('RESOURCE_EXHAUSTED') ||
-            errStr.contains('rate') ||
-            errStr.contains('429');
+            errStr.contains('RESOURCE_EXHAUSTED') || errStr.contains('429');
+
+        final delay = _parseRetryDelay(errStr);
 
         // If it's not a quota/rate error, or last attempt — bail out with fallback results
         if (!isQuotaError || attempt == maxAttempts - 1) {
@@ -431,7 +493,7 @@ Details: s=matchScore, r=reason. Sort by s desc. Only s>=40.
           // If Gemini fails, we show the top local results instead of an error.
           final fallbackResults = capped
               .where((d) {
-                final score = _localScore(d, query, _selectedDietary);
+                final score = _localScore(d, query, _selectedDietary, peopleCount: parsedPeopleCount);
                 return score >= 40; // Only decent local matches
               })
               .map((d) {
@@ -471,27 +533,47 @@ Details: s=matchScore, r=reason. Sort by s desc. Only s>=40.
         }
 
         // Wait the recommended delay before retrying
-        final waitSecs = (delay?.inSeconds ?? (5 * (attempt + 1))).clamp(3, 30);
+        final waitSecs = (delay?.inSeconds ?? (8 * (attempt + 1))).clamp(5, 45);
         _startCountdown(waitSecs);
         await Future.delayed(Duration(seconds: waitSecs));
       }
     }
   }
 
+  // ── Safe JSON parser — recovers partial objects if response was truncated ──
+  List<dynamic> _parseJsonSafe(String text) {
+    // 1. Try standard parse first
+    try {
+      return jsonDecode(text) as List<dynamic>;
+    } catch (_) {}
+
+    // 2. Extract all complete JSON objects via regex as fallback
+    final objects = <dynamic>[];
+    final re = RegExp(r'\{[^{}]+\}');
+    for (final match in re.allMatches(text)) {
+      try {
+        objects.add(jsonDecode(match.group(0)!));
+      } catch (_) {
+        // skip malformed fragment
+      }
+    }
+    if (objects.isNotEmpty) return objects;
+
+    // 3. Nothing salvageable — rethrow so the caller falls back to local results
+    throw FormatException('AI returned unparseable response: $text');
+  }
+
   // ── Friendly error messages ───────────────────────────────────────────────
   String _friendlyError(String raw) {
-    if (raw.contains('quota') ||
-        raw.contains('RESOURCE_EXHAUSTED') ||
-        raw.contains('429')) {
-      return 'Rate limit reached after 3 retries. '
-          'Please wait a minute and try again.';
+    if (raw.contains('RESOURCE_EXHAUSTED') || raw.contains('429')) {
+      return 'Firebase AI quota reached. Try again in a moment.';
     }
-    if (raw.contains('API_KEY') ||
-        raw.contains('invalid') ||
-        raw.contains('401')) {
-      return 'Invalid API key. Please check the key in ngo_ai_match_screen.dart.';
+    if (raw.contains('SAFETY')) {
+      return 'Content Blocked: The AI refused to process this request due to safety filters.';
     }
-    return 'Analysis failed. Please try again.\n\nDetails: $raw';
+
+    // Provide the raw error so we can see what's actually happening
+    return 'Analysis interrupted. Please try again.\n\nError Details: $raw';
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -683,7 +765,7 @@ class _AiBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'AI-Powered Matching',
+                  'Personalized Matching',
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -691,7 +773,7 @@ class _AiBanner extends StatelessWidget {
                 ),
                 const Gap(6),
                 Text(
-                  'Describe your needs and Gemini AI will find the best nearby donations for your NGO.',
+                  'Enter your dietary preferences and the number of people you need to feed. Gemini AI will calculate the best portion matches.',
                   style: textTheme.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.85),
                     height: 1.4,
@@ -790,9 +872,10 @@ class _NeedsForm extends StatelessWidget {
               // Quantity
               TextFormField(
                 controller: quantityCtrl,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Quantity needed (optional)',
-                  hintText: 'e.g. 50 pax, 10 kg',
+                  labelText: 'Number of people to feed',
+                  hintText: 'e.g. 50',
                   prefixIcon: Icon(Icons.people_outline_rounded),
                 ),
               ),

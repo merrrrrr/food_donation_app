@@ -44,7 +44,7 @@ dependencies:
   equatable: ^2.0.5              # Value equality for model classes
 
   # ── AI ─────────────────────────────────────────────────────────────────────
-  google_generative_ai: ^0.4.6   # Gemini 2.0 Flash for AI food matching
+  firebase_ai: ^2.0.0            # Firebase AI Logic — Gemini via Firebase, no API key needed
 
 dev_dependencies:
   flutter_test:
