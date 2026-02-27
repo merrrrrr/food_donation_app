@@ -94,7 +94,7 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 | Technology | Usage |
 |-----------|-------|
 | **Firebase Authentication** | Email/password registration and sign-in with role-based user management |
-| **Cloud Firestore** | Real-time NoSQL database for `/users` and `/donations` collections with security rules |
+| **Cloud Firestore** | Real-time NoSQL database for `/users`, `/donations`, and `/ai_quotas` collections with security rules |
 | **Firebase Storage** | Stores food photos, handover evidence photos, and profile photos with structured paths |
 | **Firebase AI Logic** (`firebase_ai: ^2.0.0`) | SDK bridge to Gemini — handles auth, quotas, and streaming natively within the Firebase project |
 | **Google Maps Flutter** | Interactive maps for location picking (donor), donation discovery (NGO), and detail views |
@@ -152,6 +152,7 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 │  │ Firebase Auth │  │Cloud Firestore│  │  Firebase Storage    │  │
 │  │ (Email/Pass)  │  │  /users       │  │  /donations/photos   │  │
 │  │               │  │  /donations   │  │  /users/profiles     │  │
+│  │               │  │  /ai_quotas   │  │                      │  │
 │  └──────────────┘  └───────────────┘  └──────────────────────┘  │
 │                                                                  │
 │  ┌──────────────────────┐  ┌──────────────────────────────────┐ │
@@ -170,7 +171,7 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 |-----------|------|
 | **UI Layer** | Role-specific screens (Donor, NGO, Admin) with Material 3 theming |
 | **Provider Layer** | Reactive state management — `AuthProvider` drives session lifecycle; `DonationProvider` manages live Firestore streams that start/stop on auth changes; `AdminProvider` streams unverified NGOs |
-| **Service Layer** | Stateless wrappers around Firebase SDKs — clean separation allows easy testing and swapping |
+| **Service Layer** | Stateless wrappers around Firebase SDKs — clean separation allows easy testing and swapping. Includes `AiQuotaService` for per-user daily AI usage tracking. |
 | **Firebase Auth** | Handles user authentication; UID used as document key in Firestore |
 | **Cloud Firestore** | Primary database with real-time listeners, security rules enforcing role-based access and valid status transitions |
 | **Firebase Storage** | Stores binary assets (food photos, evidence photos, profile photos) with structured paths |
@@ -372,6 +373,7 @@ The top 6 candidates are sent to Gemini with a carefully engineered prompt:
 - **Graceful degradation** — If Gemini is entirely unavailable, displays locally-scored results with an "AI offline" notice
 - **Cooldown timer** — 45-second minimum between searches to respect Free Tier quotas
 - **Countdown UI** — Visual countdown timers for both retry waits and cooldown periods
+- **Per-user daily quota** — `AiQuotaService` tracks each user's AI calls in Firestore (`/ai_quotas/{uid}`). The limit is **10 AI calls per user per day** (shared across AI Match and AI Autofill). The counter resets automatically at midnight and is enforced server-side, not just in-app.
 
 ### AI Configuration
 ```dart
@@ -393,7 +395,8 @@ final model = FirebaseAI.googleAI().generativeModel(
 **Problem:** During development and testing, Gemini's free tier quota was quickly exhausted, resulting in `RESOURCE_EXHAUSTED` errors that broke the AI matching flow.
 
 **Solution:** Implemented a multi-layered resilience strategy:
-- **45-second cooldown** between AI searches to spread out requests
+- **Per-user daily quota** — `AiQuotaService` writes to Firestore (`/ai_quotas/{uid}`) and enforces a hard cap of 10 AI calls per user per calendar day, shared across both AI Match and AI Autofill. This is the primary guardrail against token abuse.
+- **45-second cooldown** between AI searches to spread out requests within the daily budget
 - **Response caching** — if the same search parameters are submitted, the cached result is returned instantly without an API call
 - **Automatic retry** with exponential backoff (parses exact retry delay from Gemini error strings)
 - **Local fallback** — if AI is completely unavailable, the app gracefully degrades to showing locally-scored results, ensuring the feature never fully breaks

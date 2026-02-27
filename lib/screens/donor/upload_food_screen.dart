@@ -7,7 +7,10 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
+import 'package:provider/provider.dart';
+import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/services/ai_autofill_service.dart';
+import 'package:food_donation_app/services/ai_quota_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 import 'package:food_donation_app/widgets/custom_text_field.dart';
 import 'package:food_donation_app/widgets/dietary_selection_widget.dart';
@@ -89,6 +92,23 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
       return;
     }
 
+    // Check daily AI quota
+    final uid = context.read<AuthProvider>().currentUser?.uid;
+    if (uid != null) {
+      final allowed = await AiQuotaService().canUseAi(uid);
+      if (!allowed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Daily AI limit reached ($kAiDailyLimit calls/day). Try again tomorrow.',
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    }
+
     setState(() {
       _isAutoFilling = true;
       _wasAutoFilled = false;
@@ -110,6 +130,7 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
         _wasAutoFilled = true;
         _isAutoFilling = false;
       });
+      if (uid != null) AiQuotaService().incrementUsage(uid);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isAutoFilling = false);

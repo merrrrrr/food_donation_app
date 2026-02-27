@@ -11,7 +11,9 @@ import 'package:provider/provider.dart';
 
 import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
+import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
+import 'package:food_donation_app/services/ai_quota_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -302,6 +304,23 @@ class _NgoAiMatchScreenState extends State<NgoAiMatchScreen>
       return;
     }
 
+    // 2. Check daily AI quota
+    final uid = context.read<AuthProvider>().currentUser?.uid;
+    if (uid != null) {
+      final allowed = await AiQuotaService().canUseAi(uid);
+      if (!allowed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Daily AI limit reached ($kAiDailyLimit calls/day). Try again tomorrow.',
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    }
+
     final candidates = _eligibleDonations;
     if (candidates.isEmpty) {
       setState(() {
@@ -467,6 +486,7 @@ Sort by score descending. Only include scores >= 30.
 
         // ✅ Success
         _countdownTimer?.cancel();
+        if (uid != null) AiQuotaService().incrementUsage(uid);
         setState(() {
           _results = results;
           _cachedResults = results;
