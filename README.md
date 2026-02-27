@@ -457,8 +457,10 @@ final model = FirebaseAI.googleAI().generativeModel(
 
 | Name | Role |
 |------|------|
-| Yong Jun | Full-Stack Developer & Project Lead |
-
+| Mervin Ooi Zhian Yang | Full-Stack Developer & Project Lead |
+| Lim Tze Jiun | Full-Stack Developer |
+| Kum Yong Jun | Full-Stack Developer |
+| Liew Jun Wei Ivan | Full-Stack Developer |
 ---
 
 ## 🙏 Acknowledgments
