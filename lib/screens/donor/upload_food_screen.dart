@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
+import 'package:food_donation_app/services/ai_autofill_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 import 'package:food_donation_app/widgets/custom_text_field.dart';
 import 'package:food_donation_app/widgets/dietary_selection_widget.dart';
@@ -61,13 +62,64 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
   List<String> _contains = [];
   StorageType _storageType = StorageType.roomTemperature;
   XFile? _pickedImage;
-
+  // ── AI Auto-Fill state ───────────────────────────────────────
+  bool _isAutoFilling = false;
+  bool _wasAutoFilled = false;
+  // Incrementing this key forces ThreeTierDietaryWidget to rebuild with
+  // new initial values after an AI auto-fill.
+  int _dietaryWidgetKey = 0;
   @override
   void dispose() {
     _foodNameCtrl.dispose();
     _quantityNumberCtrl.dispose();
     _quantityUnitCtrl.dispose();
     super.dispose();
+  }
+
+  // ── AI Auto-Fill ───────────────────────────────────────────────
+  Future<void> _autoFill() async {
+    final foodName = _foodNameCtrl.text.trim();
+    if (foodName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a food name first.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isAutoFilling = true;
+      _wasAutoFilled = false;
+    });
+
+    try {
+      final result = await AiAutofillService().suggestFromFoodName(foodName);
+
+      if (!mounted) return;
+      setState(() {
+        _sourceStatus = result.sourceStatus;
+        _dietaryBase = result.dietaryBase;
+        _contains = result.contains;
+        _storageType = result.storageType;
+        if (_quantityUnitCtrl.text.trim().isEmpty) {
+          _quantityUnitCtrl.text = result.qtyUnit;
+        }
+        _dietaryWidgetKey++; // force ThreeTierDietaryWidget to rebuild
+        _wasAutoFilled = true;
+        _isAutoFilling = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isAutoFilling = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Auto-fill failed: ${e.toString().split('\n').first}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   // ── Image picker ───────────────────────────────────────────────────────────
@@ -166,10 +218,85 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
                     ? 'Food name is required.'
                     : null,
               ),
+              const Gap(10),
+
+              // ── AI Auto-Fill button ──────────────────────────────────────
+              Align(
+                alignment: Alignment.centerRight,
+                child: _isAutoFilling
+                    ? const SizedBox(
+                        height: 32,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            Gap(8),
+                            Text(
+                              'Auto-filling…',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      )
+                    : FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 32),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          textStyle: const TextStyle(fontSize: 12),
+                        ),
+                        onPressed: _autoFill,
+                        icon: const Icon(Icons.auto_awesome_rounded, size: 14),
+                        label: const Text('AI Auto-Fill'),
+                      ),
+              ),
               const Gap(14),
 
-              // ── Dietary Tags ──────────────────────────────────────────────
-              _SectionHeader(title: 'Dietary Tags'),
+              // ── Dietary Tags ────────────────────────────────────────────
+              Row(
+                children: [
+                  const Expanded(child: _SectionHeader(title: 'Dietary Tags')),
+                  if (_wasAutoFilled)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 11,
+                            color: Colors.green,
+                          ),
+                          Gap(4),
+                          Text(
+                            'AI filled',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
               const Gap(4),
               Text(
                 'Select your food profile. Choosing Vegetarian/Vegan will '
@@ -180,6 +307,7 @@ class _UploadFoodScreenState extends State<UploadFoodScreen> {
               ),
               const Gap(14),
               ThreeTierDietaryWidget(
+                key: ValueKey(_dietaryWidgetKey),
                 initialSourceStatus: _sourceStatus,
                 initialDietaryBase: _dietaryBase,
                 initialContains: _contains,
