@@ -120,46 +120,46 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Flutter App (UI Layer)                    │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐  │
-│  │  Donor   │  │   NGO    │  │  Admin   │  │  Auth Screens  │  │
-│  │ Screens  │  │ Screens  │  │Dashboard │  │ Login/Register │  │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬────────┘  │
-│       │              │             │                │            │
+│                        Flutter App (UI Layer)                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐   │
+│  │  Donor   │  │   NGO    │  │  Admin   │  │  Auth Screens  │   │
+│  │ Screens  │  │ Screens  │  │Dashboard │  │ Login/Register │   │
+│  └────┬─────┘  └─────┬────┘  └─────┬────┘  └────────┬───────┘   │
+│       │              │             │                │           │
 │  ┌────┴──────────────┴─────────────┴────────────────┴────────┐  │
-│  │              Provider State Management Layer               │  │
+│  │              Provider State Management Layer              │  │
 │  │  ┌──────────────┐ ┌────────────────┐ ┌──────────────────┐ │  │
-│  │  │ AuthProvider  │ │DonationProvider│ │  AdminProvider   │ │  │
-│  │  │(auth state,   │ │(live streams,  │ │(NGO verification│ │  │
-│  │  │ user model)   │ │ CRUD, uploads) │ │ queue)          │ │  │
+│  │  │ AuthProvider │ │DonationProvider│ │  AdminProvider   │ │  │
+│  │  │(auth state,  │ │(live streams,  │ │(NGO verification │ │  │
+│  │  │ user model)  │ │ CRUD, uploads) │ │ queue)           │ │  │
 │  │  └──────┬───────┘ └───────┬────────┘ └────────┬─────────┘ │  │
 │  └─────────┼─────────────────┼───────────────────┼───────────┘  │
-│            │                 │                   │               │
+│            │                 │                   │              │
 │  ┌─────────┴─────────────────┴───────────────────┴───────────┐  │
-│  │                 Service Layer (Stateless)                   │  │
-│  │  ┌───────────┐ ┌──────────────┐ ┌───────────┐ ┌─────────┐│  │
-│  │  │AuthService│ │DonationService│ │AdminService│ │Storage ││  │
-│  │  │           │ │              │ │           │ │Service  ││  │
-│  │  └───────────┘ └──────────────┘ └───────────┘ └─────────┘│  │
+│  │                 Service Layer (Stateless)                 │  │
+│  │  ┌───────────┐ ┌──────────────┐ ┌───────────┐ ┌─────────┐ │  │
+│  │  │AuthService│ │Donation      │ │Admin      │ │Storage  │ │  │
+│  │  │           │ │Service       │ │Service    │ │Service  │ │  │
+│  │  └───────────┘ └──────────────┘ └───────────┘ └─────────┘ │  │
 │  └───────────────────────────────────────────────────────────┘  │
 └─────────────────────────────┬───────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Google Cloud / Firebase                       │
-│                                                                  │
+│                    Google Cloud / Firebase                      │
+│                                                                 │
 │  ┌──────────────┐  ┌───────────────┐  ┌──────────────────────┐  │
-│  │ Firebase Auth │  │Cloud Firestore│  │  Firebase Storage    │  │
-│  │ (Email/Pass)  │  │  /users       │  │  /donations/photos   │  │
-│  │               │  │  /donations   │  │  /users/profiles     │  │
+│  │ Firebase Auth│  │Cloud Firestore│  │  Firebase Storage    │  │
+│  │ (Email/Pass) │  │  /users       │  │  /donations/photos   │  │
+│  │              │  │  /donations   │  │  /users/profiles     │  │
 │  └──────────────┘  └───────────────┘  └──────────────────────┘  │
-│                                                                  │
+│                                                                 │
 │  ┌──────────────────────┐  ┌──────────────────────────────────┐ │
-│  │  Firebase AI Logic    │  │     Google Maps Platform         │ │
-│  │  (Gemini 2.5 Flash)   │  │  Maps SDK + Geocoding API       │ │
-│  │  - AI food matching   │  │  - Location picker              │ │
-│  │  - Nutritional ranking│  │  - Discovery map view           │ │
-│  │  - Smart reasoning    │  │  - Detail mini-maps             │ │
+│  │  Firebase AI Logic   │  │     Google Maps Platform         │ │
+│  │  (Gemini 2.5 Flash)  │  │  Maps SDK + Geocoding API        │ │
+│  │ - AI food matching   │  │  - Location picker               │ │
+│  │ - Nutritional ranking│  │  - Discovery map view            │ │
+│  │ - Smart reasoning    │  │  - Detail mini-maps              │ │
 │  └──────────────────────┘  └──────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -306,14 +306,14 @@ Login (role = Admin)
 ```
   DONOR uploads food          NGO discovers & claims         Handover & completion
   ┌─────────────┐           ┌──────────────────┐          ┌──────────────────┐
-  │   PENDING    │──claim──→│     CLAIMED       │──verify─→│   PICKED UP      │
-  │              │           │ (+ scheduled time)│          │(donor confirms)  │
-  └──────┬──────┘           └────────┬─────────┘          └────────┬─────────┘
+  │   PENDING   │──claim──→ │     CLAIMED      │──verify─→│   PICKED UP      │
+  │             │           │(+ scheduled time)│          │(donor confirms)  │
+  └──────┬──────┘           └────────┬─────────┘          └─────────┬────────┘
          │                           │                              │
     cancel│                     cancel│(30 min)               evidence│photo
          ▼                           ▼                              ▼
   ┌─────────────┐           ┌──────────────────┐          ┌──────────────────┐
-  │  CANCELLED   │           │  PENDING (revert) │          │   COMPLETED ✅    │
+  │  CANCELLED  │           │  PENDING (revert)│          │   COMPLETED      │
   └─────────────┘           └──────────────────┘          └──────────────────┘
 ```
 
