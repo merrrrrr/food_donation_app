@@ -14,6 +14,7 @@ import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
 import 'package:food_donation_app/services/ai_quota_service.dart';
+import 'package:food_donation_app/services/analytics_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -496,6 +497,13 @@ Sort by score descending. Only include scores >= 30.
           _retryAttempt = 0;
           _retryCountdown = 0;
         });
+
+        // Metric 3 — AI Match Acceptance Rate: log one event per displayed result
+        final analytics = AnalyticsService();
+        for (final r in results) {
+          analytics.logAiMatchDonationShown(r.donation.id);
+        }
+
         return; // done — exit the retry loop
       } catch (e) {
         final errStr = e.toString();
@@ -721,7 +729,12 @@ Sort by score descending. Only include scores >= 30.
                   result: r,
                   onTap: () => Navigator.of(
                     context,
-                  ).pushNamed(AppRouter.ngoFoodDetail, arguments: r.donation),
+                  ).pushNamed(
+                    AppRouter.ngoFoodDetail,
+                    // Pass source tag so food detail screen can log
+                    // Metric 3 numerator on successful claim.
+                    arguments: {'donation': r.donation, 'source': 'ai_match'},
+                  ),
                 ),
               ),
             ],

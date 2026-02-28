@@ -9,6 +9,7 @@ import 'package:food_donation_app/app_router.dart';
 import 'package:food_donation_app/models/donation_model.dart';
 import 'package:food_donation_app/providers/auth_provider.dart';
 import 'package:food_donation_app/providers/donation_provider.dart';
+import 'package:food_donation_app/services/analytics_service.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 import 'package:food_donation_app/widgets/loading_overlay.dart';
 import 'package:food_donation_app/widgets/primary_button.dart';
@@ -23,8 +24,18 @@ class NgoFoodDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final donation =
-        ModalRoute.of(context)!.settings.arguments as DonationModel;
+    // Arguments may be a plain DonationModel (from Discovery) or a Map with
+    // an additional 'source' key when arriving from the AI Match screen.
+    final args = ModalRoute.of(context)!.settings.arguments;
+    final DonationModel donation;
+    final String? source;
+    if (args is Map<String, dynamic>) {
+      donation = args['donation'] as DonationModel;
+      source = args['source'] as String?;
+    } else {
+      donation = args as DonationModel;
+      source = null;
+    }
     final donationProv = context.watch<DonationProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -245,7 +256,7 @@ class NgoFoodDetailScreen extends StatelessWidget {
                   label: 'Claim This Donation',
                   isLoading: donationProv.isLoading,
                   leadingIcon: Icons.volunteer_activism_rounded,
-                  onPressed: () => _onClaim(context, donation),
+                  onPressed: () => _onClaim(context, donation, source: source),
                 )
               else if (donation.status == DonationStatus.claimed ||
                   donation.status == DonationStatus.pickedUp)
@@ -324,7 +335,11 @@ class NgoFoodDetailScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _onClaim(BuildContext context, DonationModel donation) async {
+  Future<void> _onClaim(
+    BuildContext context,
+    DonationModel donation, {
+    String? source,
+  }) async {
     // Pickup time selection
     final now = DateTime.now();
     TimeOfDay? selectedTime;
@@ -418,6 +433,10 @@ class NgoFoodDetailScreen extends StatelessWidget {
     if (!context.mounted) return;
 
     if (success) {
+      // Metric 3 — AI Match Acceptance Rate: count claims that originated from AI
+      if (source == 'ai_match') {
+        AnalyticsService().logAiMatchDonationClaimed(donation.id);
+      }
       // Navigate to result/evidence screen, replacing detail from stack
       Navigator.of(context).pushReplacementNamed(
         AppRouter.ngoResult,

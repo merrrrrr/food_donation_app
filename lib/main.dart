@@ -13,6 +13,7 @@ import 'package:food_donation_app/models/user_model.dart';
 import 'package:food_donation_app/theme/app_theme.dart';
 import 'package:food_donation_app/services/storage_service.dart';
 import 'package:food_donation_app/services/donation_service.dart';
+import 'package:food_donation_app/services/analytics_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Entry point
@@ -96,6 +97,10 @@ class FoodBridgeApp extends StatelessWidget {
         title: 'FoodBridge',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
+
+        // FirebaseAnalyticsObserver automatically logs screen_view events
+        // for every named route transition — no manual calls needed.
+        navigatorObservers: [AnalyticsService().observer],
 
         // All navigation is handled via named routes.
         // WrapperScreen (the root route) decides which screen to show

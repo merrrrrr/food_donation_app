@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:food_donation_app/models/donation_model.dart';
+import 'package:food_donation_app/services/analytics_service.dart';
 import 'package:uuid/uuid.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -10,6 +13,7 @@ import 'package:uuid/uuid.dart';
 class DonationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final Uuid _uuid = const Uuid();
+  final AnalyticsService _analytics = AnalyticsService();
 
   // ── Convenience ref ───────────────────────────────────────────────────────
   CollectionReference<Map<String, dynamic>> get _donationsCol =>
@@ -25,6 +29,10 @@ class DonationService {
 
     // toNewDocument() adds createdAt server timestamp
     await docRef.set({...donation.toNewDocument()});
+
+    // Metric 1 — Donation Completion Rate: count the denominator
+    unawaited(_analytics.logDonationCreated(id));
+
     return id;
   }
 
@@ -125,6 +133,18 @@ class DonationService {
         'claimedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Metric 2 — Time-to-Claim: read createdAt from snapshot for computation
+      final rawCreatedAt = snap.data()!['createdAt'];
+      final claimCreatedAt = rawCreatedAt is Timestamp
+          ? rawCreatedAt.toDate()
+          : null;
+      unawaited(
+        _analytics.logDonationClaimed(
+          donationId: donationId,
+          createdAt: claimCreatedAt,
+        ),
+      );
     });
   }
 
@@ -181,6 +201,9 @@ class DonationService {
       'evidencePhotoUrl': evidencePhotoUrl,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // Metric 1 — Donation Completion Rate: count the numerator
+    unawaited(_analytics.logDonationCompleted(donationId));
   }
 
   // ── Cancel ────────────────────────────────────────────────────────────────
