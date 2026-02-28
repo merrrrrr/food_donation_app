@@ -102,6 +102,7 @@ FoodBridge measures success through three specific, trackable outcomes — all i
 ### Other Google Technologies
 | Technology | Usage |
 |-----------|-------|
+| **Flutter** | Cross-platform UI framework (Android & iOS from single codebase) |
 | **Firebase Authentication** | Email/password registration and sign-in with role-based user management |
 | **Cloud Firestore** | Real-time NoSQL database for `/users`, `/donations`, and `/ai_quotas` collections with security rules |
 | **Firebase Storage** | Stores food photos, handover evidence photos, and profile photos with structured paths |
@@ -110,7 +111,6 @@ FoodBridge measures success through three specific, trackable outcomes — all i
 | **Google Maps Flutter** | Interactive maps for location picking (donor), donation discovery (NGO), and detail views |
 | **Google Maps Geocoding API** | Reverse geocoding to convert GPS coordinates to human-readable addresses |
 | **Geolocator** | Device GPS location fetching for map defaults and distance calculations |
-| **Flutter** | Cross-platform UI framework (Android & iOS from single codebase) |
 
 ### Other Tools & Libraries
 | Tool | Usage |
@@ -445,7 +445,7 @@ Security is enforced server-side in `firestore.rules`:
 
 ### Short-Term Enhancements
 - **Push Notifications** — Firebase Cloud Messaging to alert NGOs of new nearby donations and donors of claim activity
-- **Multi-Language Support** — Malay (BM) and Chinese (中文) localisation for broader Malaysian adoption
+- **Multi-Language Support** — Malay and Chinese localisation for broader Malaysian adoption
 - **Donation Analytics Dashboard** — Visualise food saved, meals distributed, and carbon offset metrics using the Firebase Analytics events already being collected
 - **QR Code Handover** — Generate unique QR codes for streamlined pickup verification
 
