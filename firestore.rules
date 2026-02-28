@@ -91,5 +91,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── /ai_quotas/{uid} ────────────────────────────────────────────────────
+    //  • Each document is keyed by the owner's UID.
+    //  • Only the owning user can read or write their own quota document.
+    //  • This prevents users from spoofing or resetting each other's counters.
+    match /ai_quotas/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
   } // end match /databases
 }
