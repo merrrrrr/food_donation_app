@@ -4,6 +4,7 @@
 
 - [Project Overview](#-project-overview)
 - [SDG Alignment](#-sdg-alignment)
+- [Success Metrics](#-success-metrics)
 - [Key Features](#-key-features)
 - [Technology Stack](#-technology-stack)
 - [Architecture Diagram](#-architecture-diagram)
@@ -34,6 +35,18 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 2. **NGOs** discover donations via an interactive map or an **AI matching system** (Gemini 2.5 Flash) that ranks donations against the NGO's specific needs.
 3. The platform manages the full **donation lifecycle** — from listing to claiming, handover verification, and evidence-based completion.
 4. An **admin dashboard** handles NGO verification, ensuring only legitimate organisations can claim donations.
+
+---
+
+## 📊 Success Metrics
+
+FoodBridge measures success through three specific, trackable outcomes — all instrumented via **Firebase Analytics** custom events and backed by Firestore timestamps:
+
+| Metric | Target | How It's Tracked |
+|--------|--------|------------------|
+| **Donation Completion Rate (%)** | > 60% of donations reach `completed` status | `donation_completed` ÷ `donation_created` events in Firebase Analytics; also computable from the `status` field in Firestore |
+| **Time-to-Claim (minutes)** | < 60 minutes average | `time_to_claim_minutes` parameter on `donation_claimed` event, computed from `createdAt` → `claimedAt` server timestamps |
+| **AI Match Acceptance Rate (%)** | > 40% of AI-shown donations are claimed | `ai_match_donation_claimed` ÷ `ai_match_donation_shown` events, tracked per `donation_id` |
 
 ---
 
@@ -93,6 +106,7 @@ In Malaysia alone, approximately **17,000 tonnes of food** are wasted daily, whi
 | **Cloud Firestore** | Real-time NoSQL database for `/users`, `/donations`, and `/ai_quotas` collections with security rules |
 | **Firebase Storage** | Stores food photos, handover evidence photos, and profile photos with structured paths |
 | **Firebase AI Logic** (`firebase_ai: ^2.0.0`) | SDK bridge to Gemini — handles auth, quotas, and streaming natively within the Firebase project |
+| **Firebase Analytics** | Tracks custom events for the three success metrics: `donation_created`, `donation_completed`, `donation_claimed` (with `time_to_claim_minutes`), `ai_match_donation_shown`, and `ai_match_donation_claimed`. Screen navigation tracked automatically via `FirebaseAnalyticsObserver`. |
 | **Google Maps Flutter** | Interactive maps for location picking (donor), donation discovery (NGO), and detail views |
 | **Google Maps Geocoding API** | Reverse geocoding to convert GPS coordinates to human-readable addresses |
 | **Geolocator** | Device GPS location fetching for map defaults and distance calculations |
@@ -432,7 +446,7 @@ Security is enforced server-side in `firestore.rules`:
 ### Short-Term Enhancements
 - **Push Notifications** — Firebase Cloud Messaging to alert NGOs of new nearby donations and donors of claim activity
 - **Multi-Language Support** — Malay (BM) and Chinese (中文) localisation for broader Malaysian adoption
-- **Donation Analytics Dashboard** — Visualise food saved, meals distributed, and carbon offset metrics
+- **Donation Analytics Dashboard** — Visualise food saved, meals distributed, and carbon offset metrics using the Firebase Analytics events already being collected
 - **QR Code Handover** — Generate unique QR codes for streamlined pickup verification
 
 ### Medium-Term Features
