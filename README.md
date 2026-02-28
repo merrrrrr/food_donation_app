@@ -445,12 +445,12 @@ Security is enforced server-side in `firestore.rules`:
 
 ## 👥 Team Members
 
-| Name | Role |
-|------|------|
+| Name                  | Role                                |
+|-----------------------|-------------------------------------|
 | Mervin Ooi Zhian Yang | Full-Stack Developer & Project Lead |
-| Lim Tze Jiun | Full-Stack Developer |
-| Kum Yong Jun | Full-Stack Developer |
-| Liew Jun Wei Ivan | Full-Stack Developer |
+| Lim Tze Jiun          | Full-Stack Developer                |
+| Kum Yong Jun          | Full-Stack Developer                |
+| Liew Jun Wei Ivan     | Full-Stack Developer                |
 ---
 
 ## 📄 License
