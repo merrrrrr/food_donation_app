@@ -466,7 +466,3 @@ Security is enforced server-side in `firestore.rules`:
 | Kum Yong Jun          | Full-Stack Developer                |
 | Liew Jun Wei Ivan     | Full-Stack Developer                |
 ---
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
